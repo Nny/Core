@@ -101,8 +101,6 @@ void Vehicle::RegeneratePower(Powers power)
 
     // hack: needs more research of power type from the dbc. 
     // It must contains some info about vehicles like Salvaged Chopper.
-    if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
-        return;
 
     addvalue = 10.0;
 
@@ -159,40 +157,6 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     SetHealth(GetMaxHealth());
     }
     
-    if(m_vehicleInfo->m_powerType == POWER_TYPE_STEAM)
-    {
-        setPowerType(POWER_ENERGY);
-        SetMaxPower(POWER_ENERGY, 100);
-        SetPower(POWER_ENERGY, 100);
-    }
-    else if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
-    {
-        setPowerType(POWER_ENERGY);
-        SetMaxPower(POWER_ENERGY, 50);
-        SetPower(POWER_ENERGY, 50);
-    }
-    else
-    {
-        for (uint32 i = 0; i < MAX_VEHICLE_SPELLS; ++i)
-        {
-            if(!GetVehicleData()->v_spells[i])
-                continue;
-            SpellEntry const *spellInfo = sSpellStore.LookupEntry(GetVehicleData()->v_spells[i]);
-            if(!spellInfo)
-                continue;
-
-            if(spellInfo->powerType == POWER_MANA)
-                break;
-
-            if(spellInfo->powerType == POWER_ENERGY)
-            {
-                setPowerType(POWER_ENERGY);
-                SetMaxPower(POWER_ENERGY, 100);
-                SetPower(POWER_ENERGY, 100);
-                break;
-            }
-        }
-    }
     SetHealth(GetMaxHealth());
     InstallAllAccessories();
 
@@ -346,7 +310,7 @@ int8 Vehicle::GetNextEmptySeatNum(int8 seatId, bool next) const
 {
     SeatMap::const_iterator seat = m_Seats.find(seatId);
     if(seat == m_Seats.end()) return -1;
-    while(seat->second.passenger || !seat->second.seatInfo->IsUsable())
+    while(seat->second.passenger)
     {
         if(next)
         {

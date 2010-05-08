@@ -192,7 +192,7 @@ uint32 PlayerbotAI::getSpellId(const char* args, bool master) const
         if (!pSpellInfo)
             continue;
 
-        const std::string name = pSpellInfo->SpellName[loc];
+        const std::string name = pSpellInfo->SpellName;
         if (name.empty() || !Utf8FitTo(name, wnamepart))
             continue;
 
@@ -3145,7 +3145,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
             //|| name.find("Teleport") != -1
 
             std::string comp = ",";
-            comp.append(pSpellInfo->SpellName[loc]);
+            comp.append(pSpellInfo->SpellName);
             comp.append(",");
 
             if (!(ignoreList.find(comp) == std::string::npos && alreadySeenList.find(comp) == std::string::npos))
