@@ -854,6 +854,9 @@ void World::LoadConfigSettings(bool reload)
 	setConfig(CONFIG_UINT32_ALLOWED_MOUNT3, "Custom.AllowedMount3", 0);
 	setConfig(CONFIG_BOOL_ALL_WEAPONS_MAX_SKILL, "Custom.AllWeaponSkillsAtMax", 0);
 
+	/*Vmap Rewrite*/
+    setConfig(CONFIG_UINT32_VMAP_INDOOR_INTERVAL,     "vmap.indoorCheckInterval", 0);
+
     m_VisibleUnitGreyDistance = sConfig.GetFloatDefault("Visibility.Distance.Grey.Unit", 1);
     if(m_VisibleUnitGreyDistance >  MAX_VISIBILITY_DISTANCE)
     {
