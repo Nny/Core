@@ -4894,7 +4894,7 @@ void Player::UpdateLocalChannels(uint32 newZone )
     if(!cMgr)
         return;
 
-    std::string current_zone_name = current_zone->area_name[GetSession()->GetSessionDbcLocale()];
+    std::string current_zone_name = current_zone->area_name;
 
     for(JoinedChannelsList::iterator i = m_channels.begin(), next; i != m_channels.end(); i = next)
     {
@@ -4913,7 +4913,7 @@ void Player::UpdateLocalChannels(uint32 newZone )
 
         //  new channel
         char new_channel_name_buf[100];
-        snprintf(new_channel_name_buf,100,ch->pattern[m_session->GetSessionDbcLocale()],current_zone_name.c_str());
+        snprintf(new_channel_name_buf,100,ch->pattern,current_zone_name.c_str());
         Channel* new_channel = cMgr->GetJoinChannel(new_channel_name_buf,ch->ChannelID);
 
         if((*i)!=new_channel)
@@ -7766,26 +7766,26 @@ void Player::_ApplyAllLevelScaleItemMods(bool apply)
 
 void Player::_ApplyAmmoBonuses()
 {
-    // check ammo
-    uint32 ammo_id = GetUInt32Value(PLAYER_AMMO_ID);
-    if(!ammo_id)
-        return;
+    //// check ammo
+    //uint32 ammo_id = GetUInt32Value(PLAYER_AMMO_ID);
+    //if(!ammo_id)
+    //    return;
 
-    float currentAmmoDPS;
+    //float currentAmmoDPS;
 
-    ItemPrototype const *ammo_proto = ObjectMgr::GetItemPrototype( ammo_id );
-    if( !ammo_proto || ammo_proto->Class!=ITEM_CLASS_PROJECTILE || !CheckAmmoCompatibility(ammo_proto))
-        currentAmmoDPS = 0.0f;
-    else
-        currentAmmoDPS = ammo_proto->Damage[0].DamageMin;
+    //ItemPrototype const *ammo_proto = ObjectMgr::GetItemPrototype( ammo_id );
+    //if( !ammo_proto || ammo_proto->Class!=ITEM_CLASS_PROJECTILE || !CheckAmmoCompatibility(ammo_proto))
+    //    currentAmmoDPS = 0.0f;
+    //else
+    //    currentAmmoDPS = ammo_proto->Damage[0].DamageMin;
 
-    if(currentAmmoDPS == GetAmmoDPS())
-        return;
+    //if(currentAmmoDPS == GetAmmoDPS())
+    //    return;
 
-    m_ammoDPS = currentAmmoDPS;
+    //m_ammoDPS = currentAmmoDPS;
 
-    if(CanModifyStats())
-        UpdateDamagePhysical(RANGED_ATTACK);
+    //if(CanModifyStats())
+    //    UpdateDamagePhysical(RANGED_ATTACK);
 }
 
 bool Player::CheckAmmoCompatibility(const ItemPrototype *ammo_proto) const
@@ -11136,37 +11136,37 @@ uint8 Player::CanUseAmmo( uint32 item ) const
 
 void Player::SetAmmo( uint32 item )
 {
-    if(!item)
-        return;
+    //if(!item)
+    //    return;
 
-    // already set
-    if( GetUInt32Value(PLAYER_AMMO_ID) == item )
-        return;
+    //// already set
+    //if( GetUInt32Value(PLAYER_AMMO_ID) == item )
+    //    return;
 
-    // check ammo
-    if (item)
-    {
-        uint8 msg = CanUseAmmo( item );
-        if (msg != EQUIP_ERR_OK)
-        {
-            SendEquipError(msg, NULL, NULL, item);
-            return;
-        }
-    }
+    //// check ammo
+    //if (item)
+    //{
+    //    uint8 msg = CanUseAmmo( item );
+    //    if (msg != EQUIP_ERR_OK)
+    //    {
+    //        SendEquipError(msg, NULL, NULL, item);
+    //        return;
+    //    }
+    //}
 
-    SetUInt32Value(PLAYER_AMMO_ID, item);
+    //SetUInt32Value(PLAYER_AMMO_ID, item);
 
-    _ApplyAmmoBonuses();
+    //_ApplyAmmoBonuses();
 }
 
 void Player::RemoveAmmo()
 {
-    SetUInt32Value(PLAYER_AMMO_ID, 0);
+    //SetUInt32Value(PLAYER_AMMO_ID, 0);
 
-    m_ammoDPS = 0.0f;
+    //m_ammoDPS = 0.0f;
 
-    if (CanModifyStats())
-        UpdateDamagePhysical(RANGED_ATTACK);
+    //if (CanModifyStats())
+    //    UpdateDamagePhysical(RANGED_ATTACK);
 }
 
 // Return stored item (if stored to stack, it can diff. from pItem). And pItem ca be deleted in this case.
@@ -15396,8 +15396,8 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     //"resettalents_time, trans_x, trans_y, trans_z, trans_o, transguid, extra_flags, stable_slots, at_login, zone, online, death_expire_time, taxi_path, dungeon_difficulty,"
     // 39           40                41                42                    43          44          45              46           47               48              49
     //"arenaPoints, totalHonorPoints, todayHonorPoints, yesterdayHonorPoints, totalKills, todayKills, yesterdayKills, chosenTitle, knownCurrencies, watchedFaction, drunk,"
-    // 50      51      52      53      54      55      56      57      58         59          60             61              62      63           64
-    //"health, power1, power2, power3, power4, power5, power6, power7, specCount, activeSpec, exploredZones, equipmentCache, ammoId, knownTitles, actionBars  FROM characters WHERE guid = '%u'", GUID_LOPART(m_guid));
+    // 50      51      52      53      54      55      56      57      58      59      60         61          62             63              64      65           66
+    //"health, power1, power2, power3, power4, power5, power6, power7, power8, power9, specCount, activeSpec, exploredZones, equipmentCache, ammoId, knownTitles, actionBars  FROM characters WHERE guid = '%u'", GUID_LOPART(m_guid));
     QueryResult *result = holder->GetResult(PLAYER_LOGIN_QUERY_LOADFROM);
 
     if(!result)
@@ -15445,8 +15445,8 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     SetUInt32Value(UNIT_FIELD_LEVEL, fields[6].GetUInt8());
     SetUInt32Value(PLAYER_XP, fields[7].GetUInt32());
 
-    _LoadIntoDataField(fields[60].GetString(), PLAYER_EXPLORED_ZONES_1, PLAYER_EXPLORED_ZONES_SIZE);
-    _LoadIntoDataField(fields[63].GetString(), PLAYER__FIELD_KNOWN_TITLES, KNOWN_TITLES_SIZE*2);
+    _LoadIntoDataField(fields[62].GetString(), PLAYER_EXPLORED_ZONES_1, PLAYER_EXPLORED_ZONES_SIZE);
+    _LoadIntoDataField(fields[65].GetString(), PLAYER__FIELD_KNOWN_TITLES, KNOWN_TITLES_SIZE*2);
 
     SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, DEFAULT_WORLD_OBJECT_SIZE);
     SetFloatValue(UNIT_FIELD_COMBATREACH, 1.5f);
@@ -15463,11 +15463,10 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     SetUInt32Value(PLAYER_FLAGS, fields[11].GetUInt32());
     SetInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX, fields[48].GetInt32());
 
-    SetUInt64Value(PLAYER_FIELD_KNOWN_CURRENCIES, fields[47].GetUInt64());
+    //SetUInt64Value(PLAYER_FIELD_KNOWN_CURRENCIES, fields[47].GetUInt64());
 
-    SetUInt32Value(PLAYER_AMMO_ID, fields[62].GetUInt32());
-    SetByteValue(PLAYER_FIELD_BYTES, 2, fields[64].GetUInt8());
-
+    //SetUInt32Value(PLAYER_AMMO_ID, fields[64].GetUInt32());
+    SetByteValue(PLAYER_FIELD_BYTES, 2, fields[66].GetUInt8());
 
     InitDisplayIds();
 
@@ -15763,7 +15762,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     SetUInt32Value(PLAYER_TRACK_CREATURES, 0 );
     SetUInt32Value(PLAYER_TRACK_RESOURCES, 0 );
 
-    // cleanup aura list explicitly before skill load wher some spells can be applied
+    // cleanup aura list explicitly before skill load where some spells can be applied
     RemoveAllAuras();
 
     // make sure the unit is considered out of combat for proper loading
@@ -15805,8 +15804,8 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     _LoadMailedItems(holder->GetResult(PLAYER_LOGIN_QUERY_LOADMAILEDITEMS));
     UpdateNextMailTimeAndUnreads();
 
-    m_specsCount = fields[58].GetUInt8();
-    m_activeSpec = fields[59].GetUInt8();
+    m_specsCount = fields[60].GetUInt8();
+    m_activeSpec = fields[61].GetUInt8();
 
     _LoadGlyphs(holder->GetResult(PLAYER_LOGIN_QUERY_LOADGLYPHS));
 
@@ -17102,7 +17101,7 @@ void Player::SaveToDB()
         "trans_x, trans_y, trans_z, trans_o, transguid, extra_flags, stable_slots, at_login, zone, "
         "death_expire_time, taxi_path, arenaPoints, totalHonorPoints, todayHonorPoints, yesterdayHonorPoints, totalKills, "
         "todayKills, yesterdayKills, chosenTitle, knownCurrencies, watchedFaction, drunk, health, power1, power2, power3, "
-        "power4, power5, power6, power7, specCount, activeSpec, exploredZones, equipmentCache, ammoId, knownTitles, actionBars) VALUES ("
+        "power4, power5, power6, power7, power8, power9, specCount, activeSpec, exploredZones, equipmentCache, ammoId, knownTitles, actionBars) VALUES ("
         << GetGUIDLow() << ", "
         << GetSession()->GetAccountId() << ", '"
         << sql_name << "', "
@@ -17190,7 +17189,7 @@ void Player::SaveToDB()
 
     ss << GetUInt32Value(PLAYER_CHOSEN_TITLE) << ", ";
 
-    ss << GetUInt64Value(PLAYER_FIELD_KNOWN_CURRENCIES) << ", ";
+    ss << uint64(0)/*GetUInt64Value(PLAYER_FIELD_KNOWN_CURRENCIES)*/ << ", ";
 
     // FIXME: at this moment send to DB as unsigned, including unit32(-1)
     ss << GetUInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX) << ", ";
@@ -17217,7 +17216,7 @@ void Player::SaveToDB()
     }
 
     ss << "',";
-    ss << GetUInt32Value(PLAYER_AMMO_ID) << ", '";
+    ss << uint32(0)/*GetUInt32Value(PLAYER_AMMO_ID)*/ << ", '";
     for(uint32 i = 0; i < KNOWN_TITLES_SIZE*2; ++i )
     {
         ss << GetUInt32Value(PLAYER__FIELD_KNOWN_TITLES + i) << " ";
@@ -17670,7 +17669,7 @@ void Player::_SaveStats()
 
     CharacterDatabase.PExecute("DELETE FROM character_stats WHERE guid = '%u'", GetGUIDLow());
     std::ostringstream ss;
-    ss << "INSERT INTO character_stats (guid, maxhealth, maxpower1, maxpower2, maxpower3, maxpower4, maxpower5, maxpower6, maxpower7, "
+    ss << "INSERT INTO character_stats (guid, maxhealth, maxpower1, maxpower2, maxpower3, maxpower4, maxpower5, maxpower6, maxpower7, maxpower8, maxpower9, "
         "strength, agility, stamina, intellect, spirit, armor, resHoly, resFire, resNature, resFrost, resShadow, resArcane, "
         "blockPct, dodgePct, parryPct, critPct, rangedCritPct, spellCritPct, attackPower, rangedAttackPower, spellPower) VALUES ("
         << GetGUIDLow() << ", "
@@ -22043,13 +22042,13 @@ void Player::LearnPetTalent(uint64 petGuid, uint32 talentId, uint32 talentRank)
 
 void Player::UpdateKnownCurrencies(uint32 itemId, bool apply)
 {
-    if(CurrencyTypesEntry const* ctEntry = sCurrencyTypesStore.LookupEntry(itemId))
-    {
-        if(apply)
-            SetFlag64(PLAYER_FIELD_KNOWN_CURRENCIES, (UI64LIT(1) << (ctEntry->BitIndex - 1)));
-        else
-            RemoveFlag64(PLAYER_FIELD_KNOWN_CURRENCIES, (UI64LIT(1) << (ctEntry->BitIndex - 1)));
-    }
+    //if(CurrencyTypesEntry const* ctEntry = sCurrencyTypesStore.LookupEntry(itemId))
+    //{
+    //    if(apply)
+    //        SetFlag64(PLAYER_FIELD_KNOWN_CURRENCIES, (UI64LIT(1) << (ctEntry->BitIndex - 1)));
+    //    else
+    //        RemoveFlag64(PLAYER_FIELD_KNOWN_CURRENCIES, (UI64LIT(1) << (ctEntry->BitIndex - 1)));
+    //}
 }
 
 void Player::UpdateFallInformationIfNeed( MovementInfo const& minfo,uint16 opcode )
