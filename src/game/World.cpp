@@ -1115,10 +1115,10 @@ void World::SetInitialWorldSettings()
 
     sLog.outString( "Loading Creature templates..." );
     sObjectMgr.LoadCreatureTemplates();
-
+/*
 	sLog.outString("Loading Vehicle Accessories...");
     sObjectMgr.LoadVehicleAccessories();                          // must be after LoadCreatureTemplates()
-
+*/
     sLog.outString( "Loading SpellsScriptTarget...");
     sSpellMgr.LoadSpellScriptTarget();                       // must be after LoadCreatureTemplates and LoadGameobjectInfo
 
@@ -1462,7 +1462,7 @@ void World::DetectDBCLang()
     int default_locale = MAX_LOCALE;
     for (int i = MAX_LOCALE-1; i >= 0; --i)
     {
-        if ( strlen(race->name) > 0)                        // check by race names
+        if ( strlen(race->name[i]) > 0)                        // check by race names
         {
             default_locale = i;
             m_availableDbcLocaleMask |= (1 << i);
