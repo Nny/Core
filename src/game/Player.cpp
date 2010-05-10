@@ -8282,6 +8282,9 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
         case 3703:
             NumberOfFields = 11;
             break;
+		case 4384:
+			NumberOfFields = 30;
+			break;
         default:
             NumberOfFields = 12;
             break;
@@ -8741,7 +8744,6 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 data << uint32(0xe24) << uint32(0x4);       // 10 3620 Gate of Blue Sapphire
                 data << uint32(0xe21) << uint32(0x4);       // 11 3617 Gate of Red Sun
                 data << uint32(0xe1e) << uint32(0x4);       // 12 3614 Gate of Purple Ametyst
-
                 data << uint32(0xdf3) << uint32(0x0);       // 13 3571 bonus timer (1 - on, 0 - off)
                 data << uint32(0xded) << uint32(0x0);       // 14 3565 Horde Attacker
                 data << uint32(0xdec) << uint32(0x1);       // 15 3564 Alliance Attacker
@@ -19938,7 +19940,6 @@ void Player::SendInitialPacketsAfterAddToMap()
     /*WorldPacket data0(SMSG_SET_PHASE_SHIFT, 4);
     data0 << uint32(GetPhaseMask());
     GetSession()->SendPacket(&data0);*/
-
     // update zone
     uint32 newzone, newarea;
     GetZoneAndAreaId(newzone,newarea);
@@ -19976,6 +19977,14 @@ void Player::SendInitialPacketsAfterAddToMap()
         data2 << (uint32)2;
         SendMessageToSet(&data2,true);
     }
+
+	/*if(GetVehicleGUID())
+    {
+        WorldPacket data3(SMSG_FORCE_MOVE_ROOT, 10);
+        data3 << GetPackGUID();
+        data3 << (uint32)((m_SeatData.s_flags & SF_CAN_CAST) ? 2 : 0);
+        SendMessageToSet(&data3,true);
+    }*/
 
     SendAurasForTarget(this);
     SendEnchantmentDurations();                             // must be after add to map
@@ -20733,7 +20742,7 @@ bool Player::RewardPlayerAndGroupAtKill(Unit* pVictim)
 
         if(member_with_max_level)
         {
-            /// not get Xp in PvP or no not gray players in group
+            /// not get Xp in PvP or no not gray players in group  // also no xp in a vehicle
             xp = (PvP || !not_gray_member_with_max_level) ? 0 : MaNGOS::XP::Gain(not_gray_member_with_max_level, pVictim);
             if(GetVehicleGUID() && !(m_SeatData.v_flags & VF_GIVE_EXP))
                 xp = 0;
