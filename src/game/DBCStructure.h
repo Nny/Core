@@ -1703,7 +1703,7 @@ struct VehicleEntry
     uint32  m_uiLocomotionType;                             // 34
     float   m_msslTrgtImpactTexRadius;                      // 35
     uint32  m_uiSeatIndicatorType;                          // 36
-    uint32  m_powerType;                                    // 37, new in 3.1                                                        // 37, new in 3.1
+    //uint32  m_powerType;                                    // 37, new in 3.1                                                        // 37, new in 3.1
                                                             // 38, new in 3.1
                                                             // 39, new in 3.1
 };
@@ -1757,7 +1757,9 @@ struct VehicleSeatEntry
     int32   m_uiSkin;                                       // 44
     uint32  m_flagsB;                                       // 45
                                                             // 46-57 added in 3.1, floats mostly
-    //uint32 unk[6];                                        // 58-63
+	//uint32 unk[6];                                        // 58-63
+
+    bool IsUsable() const { return m_flags & 0x2000000; }
 };
 
 struct WMOAreaTableEntry
