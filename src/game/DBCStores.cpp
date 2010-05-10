@@ -263,6 +263,7 @@ static bool LoadDBC_assert_print(uint32 fsize,uint32 rsize, const std::string& f
 struct LocalData
 {
     explicit LocalData(uint32 build) : main_build(build), availableDbcLocales(0xFFFFFFFF),checkedDbcLocaleBuilds(0) {}
+
     uint32 main_build;
 
     // bitmasks for index of fullLocaleNameList
@@ -290,6 +291,7 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
             if (!(localeData.checkedDbcLocaleBuilds & (1 << i)))
             {
                 localeData.checkedDbcLocaleBuilds |= (1<<i);// mark as checked for speedup next checks
+
 
                 uint32 build_loc = ReadDBCBuild(dbc_dir_loc,fullLocaleNameList[i].name);
                 if(localeData.main_build != build_loc)
