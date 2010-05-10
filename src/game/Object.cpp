@@ -287,7 +287,6 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                 }
                 if(((Unit*)this)->GetVehicleGUID())
                     moveFlags2 |= (MOVEFLAG_ONTRANSPORT | MOVEFLAG_ROOT);
-
             }
             break;
             case TYPEID_PLAYER:

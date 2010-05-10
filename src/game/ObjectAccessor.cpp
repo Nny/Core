@@ -64,7 +64,7 @@ ObjectAccessor::GetCreatureOrPetOrVehicle(WorldObject const &u, ObjectGuid guid)
  
     if(guid.IsVehicle())
         return u.GetMap()->GetVehicle(guid);
- 
+
     return u.GetMap()->GetCreature(guid);
 }
 

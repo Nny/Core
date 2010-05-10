@@ -8733,11 +8733,11 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             break;
         case 3703:                                          // Shattrath City
             break;
-        case 4384:                                          // SA
-            /*if (bg && bg->GetTypeID() == BATTLEGROUND_SA)
+		case 4384:                                          // SA
+			if (bg && bg->GetTypeID() == BATTLEGROUND_SA)
                 bg->FillInitialWorldStates(data);
             else
-            {*/
+            {
                 // 1-3 A defend, 4-6 H defend, 7-9 unk defend, 1 - ok, 2 - half destroyed, 3 - destroyed
                 data << uint32(0xf09) << uint32(0x4);       // 7  3849 Gate of Temple
                 data << uint32(0xe36) << uint32(0x4);       // 8  3638 Gate of Yellow Moon
@@ -8766,7 +8766,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 data << uint32(0xe2b) << uint32(0x1);       // 29 3627 Beach1 - Alliance control
                 data << uint32(0xe2a) << uint32(0x1);       // 30 3626 Beach2 - Alliance control
                 // and many unks...
-            //}
+            }
             break;
         default:
             data << uint32(0x914) << uint32(0x0);           // 7
@@ -19937,12 +19937,12 @@ void Player::SendInitialPacketsBeforeAddToMap()
 
 void Player::SendInitialPacketsAfterAddToMap()
 {
-    if(getClass() == CLASS_DEATH_KNIGHT)
+	if(getClass() == CLASS_DEATH_KNIGHT)
         ResyncRunes(MAX_RUNES);
 
-    WorldPacket data0(SMSG_SET_PHASE_SHIFT, 4);
+    /*WorldPacket data0(SMSG_SET_PHASE_SHIFT, 4);
     data0 << uint32(GetPhaseMask());
-    GetSession()->SendPacket(&data0);
+    GetSession()->SendPacket(&data0);*/
 
     // update zone
     uint32 newzone, newarea;
