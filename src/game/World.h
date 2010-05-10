@@ -386,7 +386,7 @@ enum eConfigBoolValues
     /* Broadcaster*/
     CONFIG_BOOL_BROADCAST_ENABLED,
 	
-    /* Customs*/
+    /* Darkrulerz' Customs*/
     CONFIG_BOOL_ALLOW_FLYING_MOUNTS_EVERYWHERE,
     CONFIG_BOOL_MAIL_ITEM_REFUNDABLE,
     CONFIG_BOOL_EVERYONE_DRUNK,
@@ -397,6 +397,9 @@ enum eConfigBoolValues
     CONFIG_BOOL_EXTRA_SANCTUARY,
     CONFIG_BOOL_LIMIT_ALLOWED_MOUNTS,
     CONFIG_BOOL_ALL_WEAPONS_MAX_SKILL,
+    CONFIG_BOOL_PLAYER_AUTO_RESS,
+    CONFIG_BOOL_ALL_WEAPONS_FOR_CLASS_MAX_SKILL,
+    /* End of Customs*/
 	
     /* TeamBG Mod*/
     CONFIG_BOOL_TEAM_BG_ALLOW_AB,
@@ -671,6 +674,7 @@ class World
         //movement anticheat enable flag
         inline bool GetMvAnticheatEnable()             {return m_MvAnticheatEnable;}
         inline bool GetMvAnticheatKick()               {return m_MvAnticheatKick;}
+        inline bool GetMvAnticheatAnnounce()           {return m_MvAnticheatAnnounce;}
         inline uint32 GetMvAnticheatAlarmCount()       {return m_MvAnticheatAlarmCount;}
         inline uint32 GetMvAnticheatAlarmPeriod()      {return m_MvAnticheatAlarmPeriod;}
         inline unsigned char GetMvAnticheatBan()       {return m_MvAntiCheatBan;}
@@ -679,6 +683,15 @@ class World
         inline bool GetMvAnticheatKill()               {return m_MvAnticheatKill;}
         inline float GetMvAnticheatMaxXYT()            {return m_MvAnticheatMaxXYT;}
         inline uint16 GetMvAnticheatIgnoreAfterTeleport()   {return m_MvAnticheatIgnoreAfterTeleport;}
+
+        inline bool GetMvAnticheatSpeedCheck()         {return m_MvAnticheatSpeedCheck;}
+        inline bool GetMvAnticheatWaterCheck()         {return m_MvAnticheatWaterCheck;}
+        inline bool GetMvAnticheatFlyCheck()           {return m_MvAnticheatFlyCheck;}
+        inline bool GetMvAnticheatMountainCheck()      {return m_MvAnticheatMountainCheck;}
+        inline bool GetMvAnticheatJumpCheck()          {return m_MvAnticheatJumpCheck;}
+        inline bool GetMvAnticheatTeleportCheck()      {return m_MvAnticheatTeleportCheck;}
+        inline bool GetMvAnticheatTeleport2PlaneCheck()  {return m_MvAnticheatTeleport2PlaneCheck;}
+
 
         void ProcessCliCommands();
         void QueueCliCommand(CliCommandHolder* commandHolder) { cliCmdQueue.add(commandHolder); }
@@ -777,6 +790,7 @@ class World
         //movement anticheat enable flag
         bool m_MvAnticheatEnable;
         bool m_MvAnticheatKick;
+        bool m_MvAnticheatAnnounce;
         uint32 m_MvAnticheatAlarmCount;
         uint32 m_MvAnticheatAlarmPeriod;
         unsigned char m_MvAntiCheatBan;
@@ -785,6 +799,13 @@ class World
         bool m_MvAnticheatKill;
         float m_MvAnticheatMaxXYT;
         uint16 m_MvAnticheatIgnoreAfterTeleport;
+        bool m_MvAnticheatSpeedCheck;
+        bool m_MvAnticheatWaterCheck;
+        bool m_MvAnticheatFlyCheck;
+        bool m_MvAnticheatMountainCheck;
+        bool m_MvAnticheatJumpCheck;
+        bool m_MvAnticheatTeleportCheck;
+        bool m_MvAnticheatTeleport2PlaneCheck;
 
         // CLI command holder to be thread safe
         ACE_Based::LockedQueue<CliCommandHolder*,ACE_Thread_Mutex> cliCmdQueue;

@@ -339,7 +339,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleAuraModAttackPowerOfArmor,                 //285 SPELL_AURA_MOD_ATTACK_POWER_OF_ARMOR  implemented in Player::UpdateAttackPowerAndDamage
     &Aura::HandleNoImmediateEffect,                         //286 SPELL_AURA_ABILITY_PERIODIC_CRIT      implemented in Aura::IsCritFromAbilityAura called from Aura::PeriodicTick
     &Aura::HandleNoImmediateEffect,                         //287 SPELL_AURA_DEFLECT_SPELLS             implemented in Unit::MagicSpellHitResult and Unit::MeleeSpellHitResult
-    &Aura::HandleNULL,                                      //288 increase parry/deflect, prevent attack (single spell used 67801)
+    &Aura::HandleNoImmediateEffect,                         //288 SPELL_AURA_DEFLECT_RANGED_HIT
     &Aura::HandleUnused,                                    //289 unused (3.2.2a)
     &Aura::HandleAuraModAllCritChance,                      //290 SPELL_AURA_MOD_ALL_CRIT_CHANCE
     &Aura::HandleNoImmediateEffect,                         //291 SPELL_AURA_MOD_QUEST_XP_PCT           implemented in Player::GiveXP
@@ -1412,7 +1412,7 @@ void Aura::ReapplyAffectedPassiveAuras( Unit* target, bool owner_mode )
             // non deleted and not same aura (any with same spell id)
             !itr->second->IsDeleted() && itr->second->GetId() != GetId() &&
             // and affected by aura
-            isAffectedOnSpell(itr->second->GetSpellProto()))
+            isAffectedOnSpell(itr->second->GetSpellProto()) && !itr->second->m_castItemGuid)
         {
             // only applied by self or aura caster
             if (itr->second->GetCasterGUID() == target->GetGUID())
@@ -4972,6 +4972,10 @@ void Aura::HandleAuraModStalked(bool apply, bool /*Real*/)
         m_target->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TRACK_UNIT);
     else
         m_target->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TRACK_UNIT);
+
+    // assassins mark fix
+    if(m_removeMode == AURA_REMOVE_BY_DEFAULT && m_duration <= 0 && GetSpellProto()->Id == 46459)
+        m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 }
 
 /*********************************************************/
@@ -5731,6 +5735,7 @@ void Aura::HandleAuraModIncreaseHealth(bool apply, bool Real)
     {
         case 12976:                                         // Warrior Last Stand triggered spell
         case 28726:                                         // Nightmare Seed ( Nightmare Seed )
+        case 31616:                                         // Shaman Nature's Guardian
         case 34511:                                         // Valor (Bulwark of Kings, Bulwark of the Ancient Kings)
         case 44055: case 55915: case 55917: case 67596:     // Tremendous Fortitude (Battlemaster's Alacrity)
         case 50322:                                         // Survival Instincts
@@ -7579,6 +7584,18 @@ void Aura::PeriodicTick()
             if(m_modifier.m_auraname == SPELL_AURA_PERIODIC_DAMAGE)
             {
                 pdamage = amount;
+
+                // Burn - SWP Brutallus
+                if (m_spellProto->Id == 46394)
+                {
+                    uint32 ticks = GetAuraTicks();
+                    uint32 threashold[] = {10,21,32,43,54};
+                    for (uint8 i = 0; i<5; i++)
+                        if (ticks > threashold[i])
+                            pdamage *=2;
+                        else
+                            break;
+                }
 
                 // SpellDamageBonus for magic spells
                 if(GetSpellProto()->DmgClass == SPELL_DAMAGE_CLASS_NONE || GetSpellProto()->DmgClass == SPELL_DAMAGE_CLASS_MAGIC)

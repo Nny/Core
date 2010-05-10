@@ -981,7 +981,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     pGameObj->SetRespawnTime(creatureTarget->GetRespawnTime()-time(NULL));
                     pGameObj->SetOwnerGUID(m_caster->GetGUID() );
-                    pGameObj->SetUInt32Value(GAMEOBJECT_LEVEL, m_caster->getLevel() );
+                    //pGameObj->SetUInt32Value(GAMEOBJECT_LEVEL, m_caster->getLevel() );
                     pGameObj->SetSpellId(m_spellInfo->Id);
 
                     creatureTarget->ForcedDespawn();
@@ -1526,7 +1526,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, 30452, true, NULL);
                     return;
                 }
-	            case 51858:						// Siphon of Acherus - Complete Quest
+	            case 51858:                                 // Siphon of Acherus - Complete Quest
 	            {               
                     if (!m_caster || !m_caster->isAlive())
                         return;
@@ -1731,6 +1731,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(unitTarget,60934,true,NULL);
                     return;
                 }
+                case 62653:                                 // Tidal Wave - nonheroic version
+                {
+                    if(!unitTarget)
+                        return;
+
+                    m_caster->CastSpell(unitTarget, 62654, true);
+                    return;
+                }
                 case 67019:                                 // Flask of the North
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -1860,22 +1868,20 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 if (!unitTarget)
                     return;
 
-                uint32 original_rage = m_caster->GetPower(POWER_RAGE);
+                uint32 rage = m_caster->GetPower(POWER_RAGE);
 
-                // This is needed to proper cast of 20647
-                SpellEntry const *executeInfo = sSpellStore.LookupEntry(20647);
-                if(!original_rage)
-                    m_caster->SetPower(POWER_RAGE,executeInfo->manaCost);
+                if (!rage)
+                    m_caster->SetPower(POWER_RAGE, 1);
 
-                int32 rage = original_rage;
+                uint32 rage_addition = rage;
 
-                // up to max 30 rage cost
-                if (rage > (300 - GetPowerCost()))
-                    rage = (300 - GetPowerCost());
+                // up to max 30 total rage cost
+                if (rage_addition + GetPowerCost() > 300)
+                    rage_addition = 300 - GetPowerCost();
+
+                uint32 rage_modified = rage_addition;
 
                 // Glyph of Execution bonus
-                uint32 rage_modified = rage;
-
                 if (Aura *aura = m_caster->GetDummyAura(58367))
                     rage_modified +=  aura->GetModifier()->m_amount*10;
 
@@ -1884,20 +1890,26 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                 m_caster->CastCustomSpell(unitTarget, 20647, &basePoints0, NULL, NULL, true, 0);
 
-                uint32 rageLeft = original_rage-rage; // for easier sudden death calculation
-                uint32 lastrage=0;
-                // Sudden Death - this must be stored somewhere :/
-                if(m_caster->HasAura(29723))
-                    lastrage = 30;
-                else if(m_caster->HasAura(29725))
-                    lastrage = 70;
-                else if(m_caster->HasAura(29724))
-                    lastrage = 100;
+                uint32 new_rage = rage - rage_addition;
 
-                if(rageLeft < lastrage)
-                    rageLeft = lastrage;
+                // Sudden Death
+                Unit::AuraList const& auras = m_caster->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL);
+                for (Unit::AuraList::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+                {
+                    // Only Sudden Death have this SpellIconID with SPELL_AURA_PROC_TRIGGER_SPELL
+                    if ((*itr)->GetSpellProto()->SpellIconID == 1989)
+                    {
+                        // saved rage top stored in next affect
+                        uint32 save_rage = (*itr)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_1)*10;
 
-                m_caster->SetPower(POWER_RAGE,original_rage - rage);
+                        if (new_rage < save_rage)
+                            new_rage = save_rage;
+
+                        break;
+                    }
+                }
+
+                m_caster->SetPower(POWER_RAGE, new_rage);
                 return;
             }
             // Slam
@@ -3089,6 +3101,20 @@ void Spell::EffectApplyAura(SpellEffectIndex eff_idx)
         delete Aur;
         return;
     }
+    // Mixology - increase effect by 30% and duration 100%
+    if(caster->GetTypeId() == TYPEID_PLAYER && Aur->GetSpellProto()->SpellFamilyName == SPELLFAMILY_POTION
+        && caster->HasAura(53042))
+    {
+        SpellSpecific spellSpec = GetSpellSpecific(Aur->GetSpellProto()->Id);
+        if(spellSpec == SPELL_BATTLE_ELIXIR || spellSpec == SPELL_GUARDIAN_ELIXIR || spellSpec == SPELL_FLASK_ELIXIR)
+        {
+            if(caster->HasSpell(Aur->GetSpellProto()->EffectTriggerSpell[0]))
+            {
+               duration *= 2.0f;
+               Aur->GetModifier()->m_amount *= 1.3f;
+            }
+        }
+     }
 
     if(duration != Aur->GetAuraMaxDuration())
     {
@@ -3296,14 +3322,16 @@ void Spell::EffectHeal(SpellEffectIndex /*eff_idx*/)
         // Chain Healing
         if (m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000100))
         {
-            // check for Riptide
-            if (unitTarget != m_targets.getUnitTarget())
-                return;
-            Aura* riptide = unitTarget->GetAura(SPELL_AURA_PERIODIC_HEAL, SPELLFAMILY_SHAMAN, 0, 0x00000010, caster->GetGUID());
-            if (!riptide)
-                return;
-            addhealth += addhealth/4;
-            unitTarget->RemoveAura(riptide);
+            if (unitTarget == m_targets.getUnitTarget())
+            {
+                // check for Riptide
+                Aura* riptide = unitTarget->GetAura(SPELL_AURA_PERIODIC_HEAL, SPELLFAMILY_SHAMAN, 0, 0x00000010, caster->GetGUID());
+                if (riptide)
+                {
+                    addhealth += addhealth/4;
+                    unitTarget->RemoveAura(riptide);
+                }
+            }
         }
 
         addhealth = caster->SpellHealingBonusDone(unitTarget, m_spellInfo, addhealth, HEAL);
@@ -3946,6 +3974,9 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
                     //SUMMON_TYPE_TOTEM2 = 647: 52893, Anti-Magic Zone (npc used)
                     if(prop_id == 121 || prop_id == 647)
                         DoSummonTotem(eff_idx);
+          // Snake trap exception
+                    else if (m_spellInfo->EffectMiscValueB[eff_idx] == 2301)
+                        EffectSummonSnakes(eff_idx);
                     else
                         DoSummonWild(eff_idx, summon_prop->FactionId);
                     break;
@@ -4023,6 +4054,53 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
             sLog.outError("EffectSummonType: Unhandled summon group type %u", summon_prop->Group);
             break;
     }
+}
+
+// Used only for snake trap
+void Spell::EffectSummonSnakes(SpellEffectIndex eff_idx)
+{
+    uint32 creature_entry = m_spellInfo->EffectMiscValue[eff_idx];
+    if (!creature_entry || !m_caster)
+        return;
+
+    // Find trap GO and get it coordinates to spawn snakes
+    GameObject* pTrap = m_caster->GetMap()->GetGameObject(m_originalCasterGUID);
+    if (!pTrap)
+    {
+       sLog.outError("EffectSummonSnakes faild to find trap for caster %s (GUID: %u)",m_caster->GetName(),m_caster->GetGUID());
+       return;
+    }
+
+    float position_x, position_y, position_z;
+    pTrap->GetPosition(position_x, position_y, position_z);
+
+    // Find summon duration based on DBC
+    int32 duration = GetSpellDuration(m_spellInfo);
+    if(Player* modOwner = m_caster->GetSpellModOwner())
+        modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
+    int32 amount = damage > 0 ? damage : 1;
+
+    for(int32 count = 0; count < amount; ++count)
+    {
+        // Summon snakes
+        Creature *pSummon = m_caster->SummonCreature(creature_entry, position_x, position_y, position_z, m_caster->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, duration);
+        if (!pSummon)
+        {
+            sLog.outError("EffectSummonSnakes failed to summon snakes for Unit %s (GUID: %u) bacause of invalid position (x = %f, y = %f, z = %f map = %u)"
+                ,m_caster->GetName(),m_caster->GetGUID(), position_x, position_y, position_z, m_caster->GetMap());
+            delete pSummon;
+            continue;
+        }
+
+        //Apply stats
+        pSummon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
+        pSummon->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE | UNIT_FLAG_PET_IN_COMBAT | UNIT_FLAG_PVP);
+        pSummon->SetCreatorGUID(m_caster->GetGUID());
+        pSummon->setFaction(m_caster->getFaction());
+        pSummon->SetLevel(m_caster->getLevel());
+        pSummon->SetMaxHealth(m_caster->getLevel()+ urand(20,30));
+     }
 }
 
 void Spell::EffectSummonPossessed(SpellEffectIndex eff_idx)
@@ -5917,6 +5995,16 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 44870, true);
                     break;
                 }
+                case 45151:                                 // Burn - SWP Brutallus
+                {
+                    if (!unitTarget || unitTarget == m_caster || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+                    if (unitTarget->HasAura(46394, EFFECT_INDEX_0))
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 46394, true);
+                    break;
+                }
                 case 45668:                                 // Ultra-Advanced Proto-Typical Shortening Blaster
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT || m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -6258,6 +6346,40 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     m_caster->CastSpell(unitTarget, 72588, true);
                     return;
+                }
+                case 62678: // Summon Allies of Nature
+                {
+                    uint32 spellId = 0;
+                    switch(urand(0,2))
+                    {
+                        case 0: spellId = 62688; break;
+                        case 1: spellId = 62686; break;
+                        case 2: spellId = 62685; break;
+                    }
+                    m_caster->CastSpell(m_caster, spellId, true);
+                    return;
+                }
+                case 62688: // Summon Wave - 10 Mob
+                {
+                    for(int8 i = 0; i < 12; i++)
+                        m_caster->CastSpell(m_caster, 62687, true);
+                    return;
+                }
+                case 62922: // Unstable Energy - Unstable Sun Beam remove part
+                {
+                   if(m_caster)
+                       m_caster->RemoveAurasDueToSpell(m_spellInfo->EffectBasePoints[eff_idx] + 1);
+                   return;
+                }
+                case 62262: // Brightleaf Flux
+                {
+                    if(!unitTarget)
+                        return;
+
+                    uint32 spellId = urand(0,1) ? 62251 : 62252;
+                    m_caster->CastSpell(unitTarget, spellId, true);
+                    if(Aura *pAura = unitTarget->GetAura(spellId, EFFECT_INDEX_0))
+                        pAura->SetStackAmount(urand(1,8));
                 }
 				case 72286:                                 // Invincible
                 {

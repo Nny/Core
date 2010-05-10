@@ -2929,6 +2929,10 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
 
     // Ranged attack cannot be parry/dodge only miss
     if (attType == RANGED_ATTACK)
+        //int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_RANGED_HIT)*100;- //missing something  but what??
+        //tmp+=deflect_chance;
+        //if (roll < tmp)
+            //return SPELL_MISS_DODGE;
         return SPELL_MISS_NONE;
 
     // Check for attack from behind
@@ -6092,7 +6096,10 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!procSpell)
                         return false;
 
-                    Aura* leachAura = pVictim->GetAura(procSpell->Id, EFFECT_INDEX_0);
+                    if (triggeredByAura->GetEffIndex() != EFFECT_INDEX_1)
+                        return false;
+
+                    Aura* leachAura = pVictim->GetAura(SPELL_AURA_PERIODIC_LEECH, SPELLFAMILY_PRIEST, UI64LIT(0x02000000), NULL, GetGUID());
                     if (!leachAura)
                         return false;
 
@@ -7316,8 +7323,8 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             if (dummySpell->Id == 49005)
             {
                 // TODO: need more info (cooldowns/PPM)
-                triggered_spell_id = 61607;
-                break;
+                target->CastSpell(target, 61607, true, NULL, triggeredByAura);
+                return true;
             }
             // Unholy Blight
             if (dummySpell->Id == 49194)
@@ -8160,6 +8167,14 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                     pAura->SendFakeAuraUpdate(56817, false);
                     return true;
             }
+			// Glyph of Death Grip
+			if (auraSpellInfo->Id == 62259)
+			{
+			    // remove cooldown of Death Grip
+				if (GetTypeId()==TYPEID_PLAYER)
+				    ((Player*)this)->RemoveSpellCooldown(49576, true);
+				return true;
+			}	
             // Blade Barrier
             else if (auraSpellInfo->SpellIconID == 85)
             {

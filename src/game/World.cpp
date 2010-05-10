@@ -537,6 +537,7 @@ void World::LoadConfigSettings(bool reload)
     // movement anticheat
     m_MvAnticheatEnable                     = sConfig.GetBoolDefault("Anticheat.Movement.Enable",false);
     m_MvAnticheatKick                       = sConfig.GetBoolDefault("Anticheat.Movement.Kick",false);
+    m_MvAnticheatAnnounce                   = sConfig.GetBoolDefault("Anticheat.Movement.Announce",false);
     m_MvAnticheatAlarmCount                 = (uint32)sConfig.GetIntDefault("Anticheat.Movement.AlarmCount", 5);
     m_MvAnticheatAlarmPeriod                = (uint32)sConfig.GetIntDefault("Anticheat.Movement.AlarmTime", 5000);
     m_MvAntiCheatBan                        = (unsigned char)sConfig.GetIntDefault("Anticheat.Movement.BanType",0);
@@ -545,6 +546,14 @@ void World::LoadConfigSettings(bool reload)
     m_MvAnticheatKill                       = sConfig.GetBoolDefault("Anticheat.Movement.Kill",false);
     m_MvAnticheatMaxXYT                     = sConfig.GetFloatDefault("Anticheat.Movement.MaxXYT",0.04f);
     m_MvAnticheatIgnoreAfterTeleport        = (uint16)sConfig.GetIntDefault("Anticheat.Movement.IgnoreSecAfterTeleport",10);
+
+    m_MvAnticheatSpeedCheck                 = sConfig.GetBoolDefault("Anticheat.Movement.DetectSpeedHack",1);
+    m_MvAnticheatWaterCheck                 = sConfig.GetBoolDefault("Anticheat.Movement.DetectWaterWalk",1);
+    m_MvAnticheatFlyCheck                   = sConfig.GetBoolDefault("Anticheat.Movement.DetectFlyHack",1);
+    m_MvAnticheatMountainCheck              = sConfig.GetBoolDefault("Anticheat.Movement.DetectMountainHack",1);
+    m_MvAnticheatJumpCheck                  = sConfig.GetBoolDefault("Anticheat.Movement.DetectAirJumpHack",1);
+    m_MvAnticheatTeleportCheck              = sConfig.GetBoolDefault("Anticheat.Movement.DetectTeleportHack",1);
+    m_MvAnticheatTeleport2PlaneCheck        = sConfig.GetBoolDefault("Anticheat.Movement.DetectTeleport2PlaneHack",0);
 
     setConfigMinMax(CONFIG_UINT32_COMPRESSION, "Compression", 1, 1, 9);
     setConfig(CONFIG_BOOL_ADDON_CHANNEL, "AddonChannel", true);
@@ -852,7 +861,9 @@ void World::LoadConfigSettings(bool reload)
 	setConfig(CONFIG_UINT32_ALLOWED_MOUNT1, "Custom.AllowedMount1", 0);
 	setConfig(CONFIG_UINT32_ALLOWED_MOUNT2, "Custom.AllowedMount2", 0);
 	setConfig(CONFIG_UINT32_ALLOWED_MOUNT3, "Custom.AllowedMount3", 0);
-	setConfig(CONFIG_BOOL_ALL_WEAPONS_MAX_SKILL, "Custom.AllWeaponSkillsAtMax", 0);
+	setConfig(CONFIG_BOOL_ALL_WEAPONS_MAX_SKILL, "Custom.AllWeaponSkillsAtMax", false);
+	setConfig(CONFIG_BOOL_PLAYER_AUTO_RESS, "Custom.AutoRessPlayersOnDeath", false);
+	setConfig(CONFIG_BOOL_ALL_WEAPONS_FOR_CLASS_MAX_SKILL, "Custom.AllWeaponSkillsForClassAtMax", false);
 
 	/*Vmap Rewrite*/
     setConfig(CONFIG_UINT32_VMAP_INDOOR_INTERVAL,     "vmap.indoorCheckInterval", 0);
