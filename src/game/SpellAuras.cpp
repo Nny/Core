@@ -6857,6 +6857,15 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                     if (Unit *caster = GetCaster())
                         if (caster->HasAura(56845))
                             m_target->CastSpell(m_target, 61394, true, NULL, this, GetCasterGUID());
+                    Unit *caster = GetCaster();
+                    // Glyph of Freezing Trap
+                    if (caster && caster->HasAura(56845))
+                    {
+                        cast_at_remove = true;
+                        spellId1 = 61394;
+                    }
+                    else
+                        return;
                 }
                 else
                     return;
@@ -9026,7 +9035,7 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
     pImmage->SetMaxPower(POWER_MANA, creator->GetMaxPower(POWER_MANA));
     pImmage->SetPower(POWER_MANA, creator->GetPower(POWER_MANA));
     pImmage->setFaction(creator->getFaction());
-    pImmage->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER);
+    pImmage->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM | UNIT_FLAG2_REGENERATE_POWER);
     if (creator->IsPvP())
 	{
 	  pImmage->SetPvP(true);

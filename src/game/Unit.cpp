@@ -6080,7 +6080,10 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!procSpell)
                         return false;
 
-                    Aura* healingAura = pVictim->GetAura(procSpell->Id, EFFECT_INDEX_0);
+                    if (triggeredByAura->GetEffIndex() != EFFECT_INDEX_1)
+                        return false;
+
+                    Aura* healingAura = pVictim->GetAura(SPELL_AURA_PERIODIC_HEAL, SPELLFAMILY_PRIEST, UI64LIT(0x40), 0x400, GetGUID());
                     if (!healingAura)
                         return false;
 
@@ -14898,7 +14901,26 @@ void Unit::KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpee
         NearTeleportTo(fx, fy, fz, GetOrientation(), this == target);
     }
 }
+void Unit::KnockBackPlayerWithAngle(float angle, float horizontalSpeed, float verticalSpeed)
+{
+    float vsin = sin(angle);
+	float vcos = cos(angle);
 
+    // Effect propertly implemented only for players
+	if(GetTypeId()==TYPEID_PLAYER)
+	{
+	    WorldPacket data(SMSG_MOVE_KNOCK_BACK, 8+4+4+4+4+4);
+		data << GetPackGUID();
+		data << uint32(0);                                  // Sequence
+		data << float(vcos);                                // x direction
+		data << float(vsin);                                // y direction
+		data << float(horizontalSpeed);                     // Horizontal speed
+		data << float(-verticalSpeed);                      // Z Movement speed (vertical)
+		((Player*)this)->GetSession()->SendPacket(&data);
+	}
+    else
+        sLog.outError("KnockBackPlayer: Target of KnockBackPlayer must be player!");
+}		
 float Unit::GetCombatRatingReduction(CombatRating cr) const
 {
     if (GetTypeId() == TYPEID_PLAYER)
