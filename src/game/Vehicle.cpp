@@ -101,6 +101,7 @@ void Vehicle::RegeneratePower(Powers power)
 
     // hack: needs more research of power type from the dbc. 
     // It must contains some info about vehicles like Salvaged Chopper.
+
     if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
         return;
 
@@ -132,13 +133,6 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     if(!UpdateEntry(Entry, team, data))
         return false;
 
-    if(!vehicleId)
-    {
-        CreatureDataAddon const *cainfo = GetCreatureAddon();
-        if(!cainfo)
-            return false;
-        vehicleId = cainfo->vehicle_id;
-    }
     if(!SetVehicleId(vehicleId))
         return false;
 
@@ -158,7 +152,7 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this);
     SetHealth(GetMaxHealth());
     }
-    
+
     if(m_vehicleInfo->m_powerType == POWER_TYPE_STEAM)
     {
         setPowerType(POWER_ENERGY);
@@ -346,7 +340,7 @@ int8 Vehicle::GetNextEmptySeatNum(int8 seatId, bool next) const
 {
     SeatMap::const_iterator seat = m_Seats.find(seatId);
     if(seat == m_Seats.end()) return -1;
-    while(seat->second.passenger || !seat->second.seatInfo->IsUsable())
+    while(seat->second.passenger)
     {
         if(next)
         {

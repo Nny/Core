@@ -6682,7 +6682,7 @@ bool ChatHandler::HandleAccountCharactersCommand(const char* args)
             ChrRacesEntry const* raceEntry = sChrRacesStore.LookupEntry(race);
             ChrClassesEntry const* classEntry = sChrClassesStore.LookupEntry(class_);
 
-            char const* race_name = raceEntry   ? raceEntry->name[GetSessionDbcLocale()] : "<?>";
+            char const* race_name = raceEntry ? raceEntry->name[GetSessionDbcLocale()] : "<?>";
             char const* class_name = classEntry ? classEntry->name[GetSessionDbcLocale()] : "<?>";
 
             if (!m_session)

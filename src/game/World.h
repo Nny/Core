@@ -226,6 +226,9 @@ enum eConfigUInt32Values
 	CONFIG_MIN_LEVEL_DUALSPEC,
     /* End of Darkrulerz' customs */
 
+    /* Vmap Rewrite */
+    CONFIG_UINT32_VMAP_INDOOR_INTERVAL,
+
     CONFIG_UINT32_VALUE_COUNT
 	
 };

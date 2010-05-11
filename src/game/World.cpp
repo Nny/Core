@@ -865,6 +865,9 @@ void World::LoadConfigSettings(bool reload)
 	setConfig(CONFIG_BOOL_PLAYER_AUTO_RESS, "Custom.AutoRessPlayersOnDeath", false);
 	setConfig(CONFIG_BOOL_ALL_WEAPONS_FOR_CLASS_MAX_SKILL, "Custom.AllWeaponSkillsForClassAtMax", false);
 
+	/*Vmap Rewrite*/
+    setConfig(CONFIG_UINT32_VMAP_INDOOR_INTERVAL,     "vmap.indoorCheckInterval", 0);
+
     m_VisibleUnitGreyDistance = sConfig.GetFloatDefault("Visibility.Distance.Grey.Unit", 1);
     if(m_VisibleUnitGreyDistance >  MAX_VISIBILITY_DISTANCE)
     {
@@ -1007,19 +1010,19 @@ void World::SetInitialWorldSettings()
     sObjectMgr.SetHighestGuids();
 
     ///- Check the existence of the map files for all races' startup areas.
-    if(   !MapManager::ExistMapAndVMap(0,-6240.32f, 331.033f)
-        ||!MapManager::ExistMapAndVMap(0,-8949.95f,-132.493f)
-        ||!MapManager::ExistMapAndVMap(0,-8949.95f,-132.493f)
-        ||!MapManager::ExistMapAndVMap(1,-618.518f,-4251.67f)
-        ||!MapManager::ExistMapAndVMap(0, 1676.35f, 1677.45f)
-        ||!MapManager::ExistMapAndVMap(1, 10311.3f, 832.463f)
-        ||!MapManager::ExistMapAndVMap(1,-2917.58f,-257.98f)
-        ||m_configUint32Values[CONFIG_UINT32_EXPANSION] && (
-        !MapManager::ExistMapAndVMap(530,10349.6f,-6357.29f) || !MapManager::ExistMapAndVMap(530,-3961.64f,-13931.2f) ) )
-    {
-        sLog.outError("Correct *.map files not found in path '%smaps' or *.vmap/*vmdir files in '%svmaps'. Please place *.map/*.vmap/*.vmdir files in appropriate directories or correct the DataDir value in the mangosd.conf file.",m_dataPath.c_str(),m_dataPath.c_str());
-        exit(1);
-    }
+    //if(   !MapManager::ExistMapAndVMap(0,-6240.32f, 331.033f)
+    //    ||!MapManager::ExistMapAndVMap(0,-8949.95f,-132.493f)
+    //    ||!MapManager::ExistMapAndVMap(0,-8949.95f,-132.493f)
+    //    ||!MapManager::ExistMapAndVMap(1,-618.518f,-4251.67f)
+    //    ||!MapManager::ExistMapAndVMap(0, 1676.35f, 1677.45f)
+    //    ||!MapManager::ExistMapAndVMap(1, 10311.3f, 832.463f)
+    //    ||!MapManager::ExistMapAndVMap(1,-2917.58f,-257.98f)
+    //    ||m_configUint32Values[CONFIG_UINT32_EXPANSION] && (
+    //    !MapManager::ExistMapAndVMap(530,10349.6f,-6357.29f) || !MapManager::ExistMapAndVMap(530,-3961.64f,-13931.2f) ) )
+    //{
+    //    sLog.outError("Correct *.map files not found in path '%smaps' or *.vmap/*vmdir files in '%svmaps'. Please place *.map/*.vmap/*.vmdir files in appropriate directories or correct the DataDir value in the mangosd.conf file.",m_dataPath.c_str(),m_dataPath.c_str());
+    //    exit(1);
+    //}
 
     ///- Loading strings. Getting no records means core load has to be canceled because no error message can be output.
     sLog.outString();
@@ -1123,7 +1126,10 @@ void World::SetInitialWorldSettings()
 
     sLog.outString( "Loading Creature templates..." );
     sObjectMgr.LoadCreatureTemplates();
-
+/*
+	sLog.outString("Loading Vehicle Accessories...");
+    sObjectMgr.LoadVehicleAccessories();                          // must be after LoadCreatureTemplates()
+*/
     sLog.outString( "Loading SpellsScriptTarget...");
     sSpellMgr.LoadSpellScriptTarget();                       // must be after LoadCreatureTemplates and LoadGameobjectInfo
 
@@ -1467,7 +1473,7 @@ void World::DetectDBCLang()
     int default_locale = MAX_LOCALE;
     for (int i = MAX_LOCALE-1; i >= 0; --i)
     {
-        if ( strlen(race->name[i]) > 0)                     // check by race names
+        if ( strlen(race->name[i]) > 0)                        // check by race names
         {
             default_locale = i;
             m_availableDbcLocaleMask |= (1 << i);

@@ -3741,7 +3741,7 @@ void Spell::WriteAmmoToPacket( WorldPacket * data )
                 ammoDisplayID = pItem->GetProto()->DisplayInfoID;
             else
             {
-                uint32 ammoID = ((Player*)m_caster)->GetUInt32Value(PLAYER_AMMO_ID);
+                /*uint32 ammoID = ((Player*)m_caster)->GetUInt32Value(PLAYER_AMMO_ID);
                 if(ammoID)
                 {
                     ItemPrototype const *pProto = ObjectMgr::GetItemPrototype( ammoID );
@@ -3751,7 +3751,7 @@ void Spell::WriteAmmoToPacket( WorldPacket * data )
                         ammoInventoryType = pProto->InventoryType;
                     }
                 }
-                else if(m_caster->GetDummyAura(46699))      // Requires No Ammo
+                else */if(m_caster->GetDummyAura(46699))      // Requires No Ammo
                 {
                     ammoDisplayID = 5996;                   // normal arrow
                     ammoInventoryType = INVTYPE_AMMO;
@@ -4407,6 +4407,16 @@ SpellCastResult Spell::CheckCast(bool strict)
             if(bg->GetStatus() == STATUS_WAIT_LEAVE)
                 return SPELL_FAILED_DONT_REPORT;
 
+    if(m_caster->GetTypeId() == TYPEID_PLAYER && VMAP::VMapFactory::createOrGetVMapManager()->isLineOfSightCalcEnabled())
+    {
+        if(m_spellInfo->Attributes & SPELL_ATTR_OUTDOORS_ONLY &&
+                !m_caster->GetMap()->IsOutdoors(m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ()))
+            return SPELL_FAILED_ONLY_OUTDOORS;
+
+        if(m_spellInfo->Attributes & SPELL_ATTR_INDOORS_ONLY &&
+                m_caster->GetMap()->IsOutdoors(m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ()))
+            return SPELL_FAILED_ONLY_INDOORS;
+    }
     // only check at first call, Stealth auras are already removed at second call
     // for now, ignore triggered spells
     if( strict && !m_IsTriggeredSpell)
@@ -6281,46 +6291,46 @@ SpellCastResult Spell::CheckItems()
                         if( !((Player*)m_caster)->HasItemCount( ammo, 1 ) )
                             return SPELL_FAILED_NO_AMMO;
                     };  break;
-                    case ITEM_SUBCLASS_WEAPON_GUN:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                    case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                    {
-                        uint32 ammo = ((Player*)m_caster)->GetUInt32Value(PLAYER_AMMO_ID);
-                        if(!ammo)
-                        {
-                            // Requires No Ammo
-                            if(m_caster->GetDummyAura(46699))
-                                break;                      // skip other checks
+                    //case ITEM_SUBCLASS_WEAPON_GUN:
+                    //case ITEM_SUBCLASS_WEAPON_BOW:
+                    //case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+                    //{
+                    //    uint32 ammo = ((Player*)m_caster)->GetUInt32Value(PLAYER_AMMO_ID);
+                    //    if(!ammo)
+                    //    {
+                    //        // Requires No Ammo
+                    //        if(m_caster->GetDummyAura(46699))
+                    //            break;                      // skip other checks
 
-                            return SPELL_FAILED_NO_AMMO;
-                        }
+                    //        return SPELL_FAILED_NO_AMMO;
+                    //    }
 
-                        ItemPrototype const *ammoProto = ObjectMgr::GetItemPrototype( ammo );
-                        if(!ammoProto)
-                            return SPELL_FAILED_NO_AMMO;
+                    //    ItemPrototype const *ammoProto = ObjectMgr::GetItemPrototype( ammo );
+                    //    if(!ammoProto)
+                    //        return SPELL_FAILED_NO_AMMO;
 
-                        if(ammoProto->Class != ITEM_CLASS_PROJECTILE)
-                            return SPELL_FAILED_NO_AMMO;
+                    //    if(ammoProto->Class != ITEM_CLASS_PROJECTILE)
+                    //        return SPELL_FAILED_NO_AMMO;
 
-                        // check ammo ws. weapon compatibility
-                        switch(pItem->GetProto()->SubClass)
-                        {
-                            case ITEM_SUBCLASS_WEAPON_BOW:
-                            case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                                if(ammoProto->SubClass != ITEM_SUBCLASS_ARROW)
-                                    return SPELL_FAILED_NO_AMMO;
-                                break;
-                            case ITEM_SUBCLASS_WEAPON_GUN:
-                                if(ammoProto->SubClass != ITEM_SUBCLASS_BULLET)
-                                    return SPELL_FAILED_NO_AMMO;
-                                break;
-                            default:
-                                return SPELL_FAILED_NO_AMMO;
-                        }
+                    //    // check ammo ws. weapon compatibility
+                    //    switch(pItem->GetProto()->SubClass)
+                    //    {
+                    //        case ITEM_SUBCLASS_WEAPON_BOW:
+                    //        case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+                    //            if(ammoProto->SubClass != ITEM_SUBCLASS_ARROW)
+                    //                return SPELL_FAILED_NO_AMMO;
+                    //            break;
+                    //        case ITEM_SUBCLASS_WEAPON_GUN:
+                    //            if(ammoProto->SubClass != ITEM_SUBCLASS_BULLET)
+                    //                return SPELL_FAILED_NO_AMMO;
+                    //            break;
+                    //        default:
+                    //            return SPELL_FAILED_NO_AMMO;
+                    //    }
 
-                        if( !((Player*)m_caster)->HasItemCount( ammo, 1 ) )
-                            return SPELL_FAILED_NO_AMMO;
-                    };  break;
+                    //    if( !((Player*)m_caster)->HasItemCount( ammo, 1 ) )
+                    //        return SPELL_FAILED_NO_AMMO;
+                    //};  break;
                     case ITEM_SUBCLASS_WEAPON_WAND:
                         break;
                     default:
