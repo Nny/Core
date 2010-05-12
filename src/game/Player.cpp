@@ -8720,7 +8720,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             break;
 		case 5031:                                          // TP
             if (bg && bg->GetTypeID() == BATTLEGROUND_TP)
-                bg->FillInitialWorldStates(data);
+                bg->FillInitialWorldStates(data, count);
             else
             {
 				FillInitialWorldState(data,count, 0x62d, 0x0);// 30 3626 Beach2 - Alliance control

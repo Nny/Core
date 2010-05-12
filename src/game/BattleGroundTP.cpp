@@ -598,8 +598,8 @@ WorldSafeLocsEntry const* BattleGroundTP::GetClosestGraveYard(Player* player)
 
 void BattleGroundTP::FillInitialWorldStates(WorldPacket& data, uint32& count)
 {
-	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_ALLIANCE, GetTeamScore(ALLIANCE);
-	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_HORDE, GetTeamScore(HORDE);
+	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_ALLIANCE, GetTeamScore(ALLIANCE));
+	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_HORDE, GetTeamScore(HORDE));
 
     if (m_FlagState[BG_TEAM_ALLIANCE] == BG_TP_FLAG_STATE_ON_GROUND)
 		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, -1);
