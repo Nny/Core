@@ -870,6 +870,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
     {
         case BATTLEGROUND_AV: return 15972;
         case BATTLEGROUND_WS: return 14623;
+		case BATTLEGROUND_TP: return 14624;
         case BATTLEGROUND_AB: return 14879;
         case BATTLEGROUND_EY: return 22516;
         case BATTLEGROUND_NA: return 20200;
@@ -1236,6 +1237,10 @@ void BattleGround::AddPlayer(Player *plr)
                 if(sWorld.getConfig(CONFIG_BOOL_TEAM_BG_ALLOW_WSG))
                     isAllowed = true;
                 break;
+			case BATTLEGROUND_TP:
+                if(sWorld.getConfig(CONFIG_BOOL_TEAM_BG_ALLOW_TP))
+                    isAllowed = true;
+                break;
         }
         //Set faction and apply mark buffs
         if(isAllowed)
@@ -1449,7 +1454,7 @@ void BattleGround::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
             if (isBattleGround())
                 itr->second->BonusHonor += value;
             break;
-            //used only in EY, but in MSG_PVP_LOG_DATA opcode
+            //used only in EY & TB, but in MSG_PVP_LOG_DATA opcode
         case SCORE_DAMAGE_DONE:                             // Damage Done
             itr->second->DamageDone += value;
             break;

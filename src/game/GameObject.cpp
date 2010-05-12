@@ -1385,6 +1385,9 @@ void GameObject::Use(Unit* user)
                 // WS:
                 // 179785 - Silverwing Flag
                 // 179786 - Warsong Flag
+				// TP:
+                // 303011 - Silverwing Flag
+                // 303012 - Warsong Flag
                 // EotS:
                 // 184142 - Netherstorm Flag
                 GameObjectInfo const* info = GetGOInfo();
@@ -1403,6 +1406,14 @@ void GameObject::Use(Unit* user)
                             break;
                         case 184142:                        // Netherstorm Flag
                             if(bg->GetTypeID(true) == BATTLEGROUND_EY)
+                                bg->EventPlayerClickedOnFlag(player, this);
+                            break;
+						case 303000:                        // ALLIANCE Flag
+                            if(bg->GetTypeID(true) == BATTLEGROUND_TP)
+                                bg->EventPlayerClickedOnFlag(player, this);
+                            break;
+                        case 303001:                        // HORDE Flag
+                            if(bg->GetTypeID(true) == BATTLEGROUND_TP)
                                 bg->EventPlayerClickedOnFlag(player, this);
                             break;
                     }

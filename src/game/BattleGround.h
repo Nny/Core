@@ -174,11 +174,13 @@ enum BattleGroundQueueTypeId
     BATTLEGROUND_QUEUE_SA       = 5,
     BATTLEGROUND_QUEUE_IC       = 6,
     BATTLEGROUND_QUEUE_RB       = 7,
-    BATTLEGROUND_QUEUE_2v2      = 8,
-    BATTLEGROUND_QUEUE_3v3      = 9,
-    BATTLEGROUND_QUEUE_5v5      = 10
+    BATTLEGROUND_QUEUE_TP       = 8,
+	BATTLEGROUND_QUEUE_2v2      = 9,
+    BATTLEGROUND_QUEUE_3v3      = 10,
+    BATTLEGROUND_QUEUE_5v5      = 11
+	
 };
-#define MAX_BATTLEGROUND_QUEUE_TYPES 11
+#define MAX_BATTLEGROUND_QUEUE_TYPES 12
 
 enum ScoreType
 {
@@ -189,7 +191,7 @@ enum ScoreType
     //EY, but in MSG_PVP_LOG_DATA opcode!
     SCORE_DAMAGE_DONE           = 5,
     SCORE_HEALING_DONE          = 6,
-    //WS
+    //WS & TP
     SCORE_FLAG_CAPTURES         = 7,
     SCORE_FLAG_RETURNS          = 8,
     //AB

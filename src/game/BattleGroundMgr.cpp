@@ -24,6 +24,7 @@
 #include "BattleGroundAB.h"
 #include "BattleGroundEY.h"
 #include "BattleGroundWS.h"
+#include "BattleGroundTP.h"
 #include "BattleGroundNA.h"
 #include "BattleGroundBE.h"
 #include "BattleGroundAA.h"
@@ -195,6 +196,10 @@ GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, Group* grp, BattleG
                 break;
             case BATTLEGROUND_WS:
                 if(sWorld.getConfig(CONFIG_BOOL_TEAM_BG_ALLOW_WSG))
+                    isAllowed = true;
+                break;
+			case BATTLEGROUND_TP:
+                if(sWorld.getConfig(CONFIG_BOOL_TEAM_BG_ALLOW_TP))
                     isAllowed = true;
                 break;
         }
@@ -1396,6 +1401,11 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
                 *data << (uint32)((BattleGroundWGScore*)itr->second)->FlagCaptures;         // flag captures
                 *data << (uint32)((BattleGroundWGScore*)itr->second)->FlagReturns;          // flag returns
                 break;
+			case BATTLEGROUND_TP:
+                *data << (uint32)0x00000002;                // count of next fields
+                *data << (uint32)((BattleGroundTPScore*)itr->second)->FlagCaptures;         // flag captures
+                *data << (uint32)((BattleGroundTPScore*)itr->second)->FlagReturns;          // flag returns
+                break;
             case BATTLEGROUND_AB:
                 *data << (uint32)0x00000002;                // count of next fields
                 *data << (uint32)((BattleGroundABScore*)itr->second)->BasesAssaulted;       // bases asssulted
@@ -1555,8 +1565,8 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
 
     if(bgTypeId==BATTLEGROUND_RB)
     {
-        BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA, BATTLEGROUND_IC*/};
-        uint32 bg_num = urand(0,3/*5*/);
+        BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY, BATTLEGROUND_TP/*, BATTLEGROUND_SA, BATTLEGROUND_IC*/};
+        uint32 bg_num = urand(0,4/*6*/);
         bgTypeId = random_bgs[bg_num];
         bg_template = GetBattleGroundTemplate(bgTypeId);
         if (!bg_template)
@@ -1576,6 +1586,9 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
             break;
         case BATTLEGROUND_WS:
             bg = new BattleGroundWS(*(BattleGroundWS*)bg_template);
+            break;
+		case BATTLEGROUND_TP:
+            bg = new BattleGroundTP(*(BattleGroundTP*)bg_template);
             break;
         case BATTLEGROUND_AB:
             bg = new BattleGroundAB(*(BattleGroundAB*)bg_template);
@@ -1644,6 +1657,7 @@ uint32 BattleGroundMgr::CreateBattleGround(BattleGroundTypeId bgTypeId, bool IsA
     {
         case BATTLEGROUND_AV: bg = new BattleGroundAV; break;
         case BATTLEGROUND_WS: bg = new BattleGroundWS; break;
+		case BATTLEGROUND_TP: bg = new BattleGroundTP; break;
         case BATTLEGROUND_AB: bg = new BattleGroundAB; break;
         case BATTLEGROUND_NA: bg = new BattleGroundNA; break;
         case BATTLEGROUND_BE: bg = new BattleGroundBE; break;
@@ -1962,6 +1976,8 @@ BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgType
     {
         case BATTLEGROUND_WS:
             return BATTLEGROUND_QUEUE_WS;
+		case BATTLEGROUND_TP:
+            return BATTLEGROUND_QUEUE_TP;
         case BATTLEGROUND_AB:
             return BATTLEGROUND_QUEUE_AB;
         case BATTLEGROUND_AV:
@@ -2002,6 +2018,8 @@ BattleGroundTypeId BattleGroundMgr::BGTemplateId(BattleGroundQueueTypeId bgQueue
     {
         case BATTLEGROUND_QUEUE_WS:
             return BATTLEGROUND_WS;
+		case BATTLEGROUND_QUEUE_TP:
+            return BATTLEGROUND_TP;
         case BATTLEGROUND_QUEUE_AB:
             return BATTLEGROUND_AB;
         case BATTLEGROUND_QUEUE_AV:

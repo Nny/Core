@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="game"
 	ProjectGUID="{1DC6C4DA-A028-41F3-877D-D5400C594F88}"
 	RootNamespace="game"
@@ -656,6 +656,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\BattleGroundSA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\BattleGroundTP.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\BattleGroundTP.h"
 				>
 			</File>
 			<File
@@ -1391,14 +1399,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\PlayerbotMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\PlayerbotMgr.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\game\PlayerbotAI.cpp"
 				>
 			</File>
@@ -1444,6 +1444,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\PlayerbotMageAI.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\PlayerbotMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\PlayerbotMgr.h"
 				>
 			</File>
 			<File
