@@ -656,6 +656,6 @@ void BattleGroundTP::FillInitialWorldStates(WorldPacket& data, uint32& count)
     else
         FillInitialWorldState(data, count, BG_TP_FLAG_STATE_ALLIANCE, 1);
 
-    data << uint32(BG_TP_UNK1) << uint32(1);
-    data << uint32(BG_TP_TIME_REMAINING) << uint32(GetRemainingTimeInMinutes());
+	FillInitialWorldState(data, count, BG_TP_UNK1, 1);
+	FillInitialWorldState(data, count, BG_TP_TIME_REMAINING, GetRemainingTimeInMinutes());
 }
