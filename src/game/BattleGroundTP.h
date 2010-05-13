@@ -55,7 +55,7 @@ enum BG_TP_WorldStates
     BG_TP_FLAG_CAPTURES_MAX       = 1601,
     BG_TP_FLAG_STATE_HORDE        = 2338,
     BG_TP_FLAG_STATE_ALLIANCE     = 2339,
-	BG_TP_UNK1                    = 4247, // Show time limit?
+    BG_TP_UNK1                    = 4247, // Show time limit?
     BG_TP_TIME_REMAINING          = 4248
 };
 
@@ -146,7 +146,7 @@ class BattleGroundTP : public BattleGround
         void SetTeamPoint(uint32 TeamID, uint32 Points = 0) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] = Points; }
         void RemovePoint(uint32 TeamID, uint32 Points = 1)  { m_TeamScores[GetTeamIndexByTeamId(TeamID)] -= Points; }
 
-		uint32 GetRemainingTimeInMinutes() { return (uint32)ceil(float(m_EndTimer) / (MINUTE * IN_MILLISECONDS)); }
+        uint32 GetRemainingTimeInMinutes() { return (uint32)ceil(float(m_EndTimer) / (MINUTE * IN_MILLISECONDS)); }
     private:
         uint64 m_FlagKeepers[BG_TEAMS_COUNT];
 
@@ -158,7 +158,7 @@ class BattleGroundTP : public BattleGround
         uint32 m_ReputationCapture;
         uint32 m_HonorWinKills;
         uint32 m_HonorEndKills;
-		uint32 m_EndTimer;
+        uint32 m_EndTimer;
         uint32 m_LastCapturedFlagTeam;
 };
 #endif
