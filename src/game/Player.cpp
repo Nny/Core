@@ -8344,6 +8344,19 @@ static WorldStatePair WS_world_states[] =
     { 0x0,   0x0 }
 };
 
+static WorldStatePair TP_world_states[] =
+{
+    { 0x62d, 0x0 },                                         // 7 1581 alliance flag captures
+    { 0x62e, 0x0 },                                         // 8 1582 horde flag captures
+    { 0x609, 0x0 },                                         // 9 1545 unk, set to 1 on alliance flag pickup...
+    { 0x60a, 0x0 },                                         // 10 1546 unk, set to 1 on horde flag pickup, after drop it's -1
+    { 0x60b, 0x2 },                                         // 11 1547 unk
+    { 0x641, 0x3 },                                         // 12 1601 unk (max flag captures?)
+    { 0x922, 0x1 },                                         // 13 2338 horde (0 - hide, 1 - flag ok, 2 - flag picked up (flashing), 3 - flag picked up (not flashing)
+    { 0x923, 0x1 },                                         // 14 2339 alliance (0 - hide, 1 - flag ok, 2 - flag picked up (flashing), 3 - flag picked up (not flashing)
+    { 0x0,   0x0 }
+};
+
 static WorldStatePair AB_world_states[] =
 {
     { 0x6e7, 0x0 },                                         // 7 1767 stables alliance
@@ -8722,18 +8735,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             if (bg && bg->GetTypeID() == BATTLEGROUND_TP)
                 bg->FillInitialWorldStates(data, count);
             else
-            {
-				FillInitialWorldState(data,count, 0x62d, 0x0);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x62e, 0x0);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x609, 0x0);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x60a, 0x0);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x60b, 0x2);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x641, 0x3);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x922, 0x1);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x923, 0x1);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x1097, 0x1);// 30 3626 Beach2 - Alliance control
-				FillInitialWorldState(data,count, 0x1098, 0x19);// 30 3626 Beach2 - Alliance control
-            }
+                FillInitialWorldState(data,count, TP_world_states);
             break;
         default:
             FillInitialWorldState(data,count, 0x914, 0x0);  // 7

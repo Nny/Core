@@ -27,6 +27,7 @@
 #include "WorldPacket.h"
 #include "Language.h"
 #include "MapManager.h"
+#include "World.h"
 
 BattleGroundTP::BattleGroundTP()
 {
@@ -86,6 +87,31 @@ void BattleGroundTP::Update(uint32 diff)
                 RespawnFlagAfterDrop(HORDE);
             }
         }
+
+        if (m_EndTimer < diff)
+        {
+            uint32 allianceScore = GetTeamScore(ALLIANCE);
+            uint32 hordeScore    = GetTeamScore(HORDE);
+
+            if (allianceScore > hordeScore)
+                EndBattleGround(ALLIANCE);
+            else if (allianceScore < hordeScore)
+                EndBattleGround(HORDE);
+            else
+            {
+                // if 0 => tie
+                EndBattleGround(m_LastCapturedFlagTeam);
+            }
+        }
+        else
+        {
+            uint32 minutesLeftPrev = GetRemainingTimeInMinutes();
+            m_EndTimer -= diff;
+            uint32 minutesLeft = GetRemainingTimeInMinutes();
+
+            if (minutesLeft != minutesLeftPrev)
+                UpdateWorldState(BG_TP_TIME_REMAINING, minutesLeft);
+        }
     }
 }
 
@@ -117,13 +143,13 @@ void BattleGroundTP::RespawnFlag(uint32 Team, bool captured)
 {
     if (Team == ALLIANCE)
     {
-        sLog.outDebug("Respawn Alliance flag");
+        DEBUG_LOG("Respawn Alliance flag");
         m_FlagState[BG_TEAM_ALLIANCE] = BG_TP_FLAG_STATE_ON_BASE;
         SpawnEvent(TP_EVENT_FLAG_A, 0, true);
     }
     else
     {
-        sLog.outDebug("Respawn Horde flag");
+        DEBUG_LOG("Respawn Horde flag");
         m_FlagState[BG_TEAM_HORDE] = BG_TP_FLAG_STATE_ON_BASE;
         SpawnEvent(TP_EVENT_FLAG_H, 0, true);
     }
@@ -164,6 +190,8 @@ void BattleGroundTP::EventPlayerCapturedFlag(Player *Source)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
+
+    m_LastCapturedFlagTeam = Source->GetTeam();
 
     uint32 winner = 0;
 
@@ -526,15 +554,16 @@ void BattleGroundTP::Reset()
     m_HonorWinKills = (isBGWeekend) ? 3 : 1;
     m_HonorEndKills = (isBGWeekend) ? 4 : 2;
 
+    m_EndTimer = BG_TP_TIME_LIMIT;
+    m_LastCapturedFlagTeam = 0;
 }
 
 void BattleGroundTP::EndBattleGround(uint32 winner)
 {
     //win reward
-    if (winner == ALLIANCE)
-        RewardHonorToTeam(GetBonusHonorFromKill(m_HonorWinKills), ALLIANCE);
-    if (winner == HORDE)
-        RewardHonorToTeam(GetBonusHonorFromKill(m_HonorWinKills), HORDE);
+    if (winner)
+        RewardHonorToTeam(GetBonusHonorFromKill(sWorld.getConfig(CONFIG_UINT32_BONUS_HONOR_TP_WIN)), winner);
+
     //complete map_end rewards (even if no team wins)
     RewardHonorToTeam(GetBonusHonorFromKill(m_HonorEndKills), ALLIANCE);
     RewardHonorToTeam(GetBonusHonorFromKill(m_HonorEndKills), HORDE);
@@ -598,24 +627,24 @@ WorldSafeLocsEntry const* BattleGroundTP::GetClosestGraveYard(Player* player)
 
 void BattleGroundTP::FillInitialWorldStates(WorldPacket& data, uint32& count)
 {
-	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_ALLIANCE, GetTeamScore(ALLIANCE));
-	FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_HORDE, GetTeamScore(HORDE));
+    FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_ALLIANCE, GetTeamScore(ALLIANCE));
+    FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_HORDE, GetTeamScore(HORDE));
 
     if (m_FlagState[BG_TEAM_ALLIANCE] == BG_TP_FLAG_STATE_ON_GROUND)
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, -1);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, -1);
     else if (m_FlagState[BG_TEAM_ALLIANCE] == BG_TP_FLAG_STATE_ON_PLAYER)
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, 1);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, 1);
     else
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, 0);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_ALLIANCE, 0);
 
     if (m_FlagState[BG_TEAM_HORDE] == BG_TP_FLAG_STATE_ON_GROUND)
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, -1);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, -1);
     else if (m_FlagState[BG_TEAM_HORDE] == BG_TP_FLAG_STATE_ON_PLAYER)
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, 1);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, 1);
     else
-		FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, 0);
+        FillInitialWorldState(data, count, BG_TP_FLAG_UNK_HORDE, 0);
 
-    data << uint32(BG_TP_FLAG_CAPTURES_MAX) << uint32(BG_TP_MAX_TEAM_SCORE);
+    FillInitialWorldState(data, count, BG_TP_FLAG_CAPTURES_MAX, BG_TP_MAX_TEAM_SCORE);
 
     if (m_FlagState[BG_TEAM_HORDE] == BG_TP_FLAG_STATE_ON_PLAYER)
         FillInitialWorldState(data, count, BG_TP_FLAG_STATE_HORDE, 2);
@@ -626,4 +655,7 @@ void BattleGroundTP::FillInitialWorldStates(WorldPacket& data, uint32& count)
         FillInitialWorldState(data, count, BG_TP_FLAG_STATE_ALLIANCE, 2);
     else
         FillInitialWorldState(data, count, BG_TP_FLAG_STATE_ALLIANCE, 1);
+
+    data << uint32(BG_TP_UNK1) << uint32(1);
+    data << uint32(BG_TP_TIME_REMAINING) << uint32(GetRemainingTimeInMinutes());
 }
