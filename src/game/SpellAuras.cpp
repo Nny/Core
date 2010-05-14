@@ -2413,7 +2413,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // not use ammo and not allow use
                             ((Player*)m_target)->RemoveAmmo();
                         return;
-					case 48025:                             // Headless Horseman's Mount
+                    case 47977:                             // Magic Broom
+                        Spell::SelectMountByAreaAndSkill(m_target, 42680, 42683, 42667, 42668, 0);
+                        return;
+                    case 48025:                             // Headless Horseman's Mount
                         Spell::SelectMountByAreaAndSkill(m_target, 51621, 48024, 51617, 48023, 0);
 						return;
                     case 55328:                             // Stoneclaw Totem I
@@ -2461,6 +2464,9 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         if (m_target->GetTypeId() == TYPEID_PLAYER)
                             ((Player*)m_target)->removeSpell(63680);
                         return;
+                    case 71342:                             // Big Love Rocket
+                        Spell::SelectMountByAreaAndSkill(m_target, 71344, 71345, 71346, 71347, 0);
+                        return; 
                     case 72286:                             // Invincible
                         Spell::SelectMountByAreaAndSkill(m_target, 72281, 72282, 72283, 72284, 0);
                         return;
@@ -2893,42 +2899,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     else
                         m_target->m_AuraFlags |= ~UNIT_AURAFLAG_ALIVE_INVISIBLE;
                     return;
-                case 71342: //Big Love Rocket - there is no spell for mount speeds
-                    if(m_target->GetTypeId() != TYPEID_PLAYER)
-                        return;
-
-                    uint32 skill = ((Player*)m_target)->GetSkillValue(762);
-
-                    //Flight     
-                    if(skill >= 225 && (m_target->GetMapId() == 530 || (m_target->GetMapId() == 571 && m_target->HasSpell(54197))))
-                    {
-                        WorldPacket data;
-                        if(apply)
-                            data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
-                        else
-                            data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
-                        data << m_target->GetPackGUID();
-                        data << uint32(0);                                      // unknown
-                        m_target->SendMessageToSet(&data, true);
-
-                        //Players on flying mounts must be immune to polymorph
-                        if (m_target->GetTypeId()==TYPEID_PLAYER)
-                            m_target->ApplySpellImmune(GetId(),IMMUNITY_MECHANIC,MECHANIC_POLYMORPH,apply);
-                        if(skill == 225 && apply)
-                            m_target->SetSpeedRate(MOVE_FLIGHT, 1.5f, true);
-                        else if(skill == 300 && apply)
-                            m_target->SetSpeedRate(MOVE_FLIGHT, 3.1f, true);
-                        else if(!apply)
-                            m_target->SetSpeedRate(MOVE_FLIGHT, 1.0f, true);
-                    }
-                    //Ground speed
-                    if(skill == 75 && apply)
-                        m_target->SetSpeedRate(MOVE_RUN, 1.6f, true);
-                    else if(skill >= 150 && apply)
-                        m_target->SetSpeedRate(MOVE_RUN, 2.0f, true);
-                    else if(!apply)
-                        m_target->SetSpeedRate(MOVE_RUN, 1.0f, true);
-                    return;
             }
             break;
         }
@@ -3268,7 +3238,9 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         return;
     }
 
-    if (ssEntry->modelID_A)
+    modelid = m_target->GetModelForForm(form);
+
+    if (!modelid && ssEntry->modelID_A)
     {
         // i will asume that creatures will always take the defined model from the dbc
         // since no field in creature_templates describes wether an alliance or
