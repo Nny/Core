@@ -652,6 +652,10 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         // Eviscerate and Envenom Bonus Damage (item set effect)
                         if(m_caster->GetDummyAura(37169))
                             damage += combo*40;
+							
+                        // Apply spell mods
+                        if (Player* modOwner = m_caster->GetSpellModOwner())
+                            modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DAMAGE, damage);
                     }
                 }
                 // Gouge
@@ -6390,38 +6394,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     if(Aura *pAura = unitTarget->GetAura(spellId, EFFECT_INDEX_0))
                         pAura->SetStackAmount(urand(1,8));
                 }
-				case 72286:                                 // Invincible
-                {
-                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
-                        return;
-
-                    // Prevent stacking of mounts
-                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
-                    uint16 skillval = ((Player*)unitTarget)->GetSkillValue(SKILL_RIDING);
-                    if (!skillval)
-                        return;
-
-                    if (skillval >= 225)
-                    {
-                        uint32 spellid = skillval >= 300 ? 72284 : 72283;
-                        SpellEntry const *pSpell = sSpellStore.LookupEntry(spellid);
-                        // zone check
-                        uint32 zone, area;
-                        unitTarget->GetZoneAndAreaId(zone, area);
-
-                        SpellCastResult locRes= sSpellMgr.GetSpellAllowedInLocationError(pSpell, unitTarget->GetMapId(), zone, area, unitTarget->GetCharmerOrOwnerPlayerOrPlayerItself());
-                        if (locRes != SPELL_CAST_OK || !((Player*)unitTarget)->IsKnowHowFlyIn(unitTarget->GetMapId(),zone))
-                            unitTarget->CastSpell(unitTarget, 72282, true);
-                        else
-                            unitTarget->CastSpell(unitTarget, pSpell, true);
-                    }
-                    else if (skillval >= 150)
-                        unitTarget->CastSpell(unitTarget, 72282, true);
-                    else
-                        unitTarget->CastSpell(unitTarget, 72281, true);
-
-                    return;
-                }
             }
             break;
         }
@@ -6858,6 +6830,9 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
     if(m_spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && (m_spellInfo->SpellFamilyFlags & SPELLFAMILYFLAG_ROGUE_VANISH))
     {
         ((Player *)m_caster)->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
+        // Overkill 
+        if(((Player*)m_caster)->HasSpell(58426))
+            m_caster->CastSpell(m_caster, 58427, true);
     }
 }
 

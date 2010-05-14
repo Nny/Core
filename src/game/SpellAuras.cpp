@@ -2413,36 +2413,39 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // not use ammo and not allow use
                             ((Player*)m_target)->RemoveAmmo();
                         return;
-                    case 55328:                                 // Stoneclaw Totem I
+					case 48025:                             // Headless Horseman's Mount
+                        Spell::SelectMountByAreaAndSkill(m_target, 51621, 48024, 51617, 48023, 0);
+						return;
+                    case 55328:                             // Stoneclaw Totem I
                         m_target->CastSpell(m_target, 5728, true);
                         return;
-                    case 55329:                                 // Stoneclaw Totem II
+                    case 55329:                             // Stoneclaw Totem II
                         m_target->CastSpell(m_target, 6397, true);
                         return;
-                    case 55330:                                 // Stoneclaw Totem III
+                    case 55330:                             // Stoneclaw Totem III
                         m_target->CastSpell(m_target, 6398, true);
                         return;
-                    case 55332:                                 // Stoneclaw Totem IV
+                    case 55332:                             // Stoneclaw Totem IV
                         m_target->CastSpell(m_target, 6399, true);
                         return;
-                    case 55333:                                 // Stoneclaw Totem V
+                    case 55333:                             // Stoneclaw Totem V
                         m_target->CastSpell(m_target, 10425, true);
                         return;
-                    case 55335:                                 // Stoneclaw Totem VI
+                    case 55335:                             // Stoneclaw Totem VI
                         m_target->CastSpell(m_target, 10426, true);
                         return;
-                    case 55278:                                 // Stoneclaw Totem VII
+                    case 55278:                             // Stoneclaw Totem VII
                         m_target->CastSpell(m_target, 25513, true);
                         return;
-                    case 58589:                                 // Stoneclaw Totem VIII
+                    case 58589:                             // Stoneclaw Totem VIII
                         m_target->CastSpell(m_target, 58583, true);
                         return;
-                    case 58590:                                 // Stoneclaw Totem IX
+                    case 58590:                             // Stoneclaw Totem IX
                         m_target->CastSpell(m_target, 58584, true);
                         return;
-                    case 58591:                                 // Stoneclaw Totem X
+                    case 58591:                             // Stoneclaw Totem X
                         m_target->CastSpell(m_target, 58585, true);
-						return;
+                        return;
                     case 62061:                             // Festive Holiday Mount
                         if (m_target->HasAuraType(SPELL_AURA_MOUNTED))
                             // Reindeer Transformation
@@ -2457,9 +2460,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // Teach Learn Talent Specialization Switches, remove
                         if (m_target->GetTypeId() == TYPEID_PLAYER)
                             ((Player*)m_target)->removeSpell(63680);
-                        return;
-                    case 48025:                             // Headless Horseman's Mount
-                        Spell::SelectMountByAreaAndSkill(m_target, 51621, 48024, 51617, 48023, 0);
                         return;
                     case 72286:                             // Invincible
                         Spell::SelectMountByAreaAndSkill(m_target, 72281, 72282, 72283, 72284, 0);
@@ -2552,6 +2552,20 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
                 break;
             }
+			case SPELLFAMILY_ROGUE:
+			{
+                if (GetId() == 52916) // Honor Among Thieves
+                {
+                    if(m_target->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if (Unit * target = Unit::GetUnit(*m_target,((Player*)m_target)->GetComboTarget()))
+                            m_target->CastSpell(target, 51699, true);
+                        else if( Unit * target = m_target->getVictim() )
+                            m_target->CastSpell(target, 51699, true);
+                    }
+                }
+                break;
+			}
         }
     }
     // AT REMOVE
@@ -3931,13 +3945,7 @@ void Aura::HandleModPossess(bool apply, bool Real)
 
         if(m_target->GetTypeId() == TYPEID_PLAYER && !m_target->GetVehicleGUID())
         {
-            //TEAMBG check
-            if(((Player*)m_target)->isInTeamBG() && ((Player*)m_target)->getFakeTeam() == 1) //BLUE(ali)
-                ((Player*)m_target)->setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_BLUE));
-            else if(((Player*)m_target)->isInTeamBG() && ((Player*)m_target)->getFakeTeam() == 2) //RED(horde)
-                ((Player*)m_target)->setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_RED));
-            else
-                ((Player*)m_target)->setFactionForRace(m_target->getRace());
+            ((Player*)m_target)->setFactionForRace(m_target->getRace());
             ((Player*)m_target)->SetClientControl(m_target, 1);
         }
         else if(m_target->GetTypeId() == TYPEID_UNIT)
@@ -4073,15 +4081,7 @@ void Aura::HandleModCharm(bool apply, bool Real)
         m_target->SetCharmerGUID(0);
 
         if(m_target->GetTypeId() == TYPEID_PLAYER)
-        {
-            //TEAMBG check
-            if(((Player*)m_target)->isInTeamBG() && ((Player*)m_target)->getFakeTeam() == 1) //BLUE(ali)
-                ((Player*)m_target)->setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_BLUE));
-            else if(((Player*)m_target)->isInTeamBG() && ((Player*)m_target)->getFakeTeam() == 2) //RED(horde)
-                ((Player*)m_target)->setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_RED));
-            else
-                ((Player*)m_target)->setFactionForRace(m_target->getRace());
-        }
+            ((Player*)m_target)->setFactionForRace(m_target->getRace());
         else
         {
             CreatureInfo const *cinfo = ((Creature*)m_target)->GetCreatureInfo();
@@ -8426,12 +8426,14 @@ void Aura::PeriodicDummyTick()
             // Mirror Image
             if (spell->Id == 55342)
             {
-                if(m_target->GetTypeId() != TYPEID_PLAYER)
-                    break;
-                //Clear target
-                WorldPacket data(SMSG_CLEAR_TARGET, 8);
-                data << m_target->GetGUID();
-                ((Player*)m_target)->SendMessageToSetInRange(&data, 80.0f, false, false, true);
+				if(m_target->GetTypeId() != TYPEID_PLAYER)
+					break;
+				//Clear target
+				WorldPacket data(SMSG_CLEAR_TARGET, 8);
+				data << m_target->GetGUID();
+				((Player*)m_target)->SendMessageToSetInRange(&data, 80.0f, false, false, true);
+                // Set name of summons to name of caster
+                m_target->CastSpell(m_target, m_spellProto->EffectTriggerSpell[m_effIndex], true);
                 m_isPeriodic = false;
             }
             break;
@@ -8956,6 +8958,39 @@ void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
     ((Player*)m_target)->UpdateAllSpellCritChances();
 }
 
+void Aura::HandleAuraLinked(bool apply, bool Real)
+{
+    if (!Real)
+        return;
+
+    uint32 linkedSpell = m_spellProto->EffectTriggerSpell[m_effIndex];
+    SpellEntry const *spellInfo = sSpellStore.LookupEntry(linkedSpell);
+    if (!spellInfo)
+    {
+        sLog.outError("HandleAuraLinked for spell %u effect %u: triggering unknown spell %u", m_spellProto->Id, m_effIndex, linkedSpell);
+        return;
+    }
+
+    if (apply)
+        m_target->CastSpell(m_target, linkedSpell, true, NULL, this);
+    else
+        m_target->RemoveAurasByCasterSpell(linkedSpell, GetCasterGUID());
+}
+
+void Aura::HandleAuraOpenStable(bool apply, bool Real)
+{
+    if(!apply || !Real)
+        return;
+
+    Unit* caster = GetCaster();
+    if(!caster || !caster->IsInWorld() || caster->GetTypeId() != TYPEID_PLAYER)
+        return;
+
+    WorldPacket data;
+    data << uint64(caster->GetGUID());
+    ((Player*)caster)->GetSession()->HandleListStabledPetsOpcode(data);
+}
+
 void Aura::HandleAllowOnlyAbility(bool apply, bool Real)
 {
     if(!Real)
@@ -8978,21 +9013,6 @@ void Aura::HandleAllowOnlyAbility(bool apply, bool Real)
     m_target->UpdateDamagePhysical(RANGED_ATTACK);
     m_target->UpdateDamagePhysical(OFF_ATTACK);
 
-}
-
-void Aura::HandleAuraOpenStable(bool apply, bool Real)
-{
-    if(!apply || !Real)
-        return;
-
-    Unit* caster = GetCaster();
-
-    if(!caster || !caster->IsInWorld() || caster->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    WorldPacket data;
-    data << uint64(caster->GetGUID());
-    ((Player*)caster)->GetSession()->HandleListStabledPetsOpcode(data);
 }
 
 void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
@@ -9066,23 +9086,4 @@ void Aura::ApplyHasteToPeriodic()
         m_maxduration = periodic * ticks;
     }
     m_modifier.periodictime = periodic;
-}
-
-void Aura::HandleAuraLinked(bool apply, bool Real)
-{
-    if (!Real)
-        return;
-
-    uint32 linkedSpell = m_spellProto->EffectTriggerSpell[m_effIndex];
-    SpellEntry const *spellInfo = sSpellStore.LookupEntry(linkedSpell);
-    if (!spellInfo)
-    {
-        sLog.outError("HandleAuraLinked for spell %u effect %u: triggering unknown spell %u", m_spellProto->Id, m_effIndex, linkedSpell);
-        return;
-    }
-
-    if (apply)
-        m_target->CastSpell(m_target, linkedSpell, true, NULL, this);
-    else
-        m_target->RemoveAurasByCasterSpell(linkedSpell, GetCasterGUID());
 }

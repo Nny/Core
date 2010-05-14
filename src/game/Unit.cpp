@@ -1331,6 +1331,29 @@ void Unit::DealSpellDamage(SpellNonMeleeDamage *damageInfo, bool durabilityLoss)
     // Call default DealDamage (send critical in hit info for threat calculation)
     CleanDamage cleanDamage(0, BASE_ATTACK, damageInfo->HitInfo & SPELL_HIT_TYPE_CRIT ? MELEE_HIT_CRIT : MELEE_HIT_NORMAL);
     DealDamage(pVictim, damageInfo->damage, &cleanDamage, SPELL_DIRECT_DAMAGE, SpellSchoolMask(damageInfo->schoolMask), spellProto, durabilityLoss);
+
+    // Check if effect can trigger anything actually (is this a right ATTR ?)
+    if( spellProto->AttributesEx3 & SPELL_ATTR_EX3_UNK16 )
+        return;
+
+    bool hasWeaponDmgEffect = false;
+
+    for (uint32 i = 0; i < 3; ++i)
+    {
+        if (spellProto->Effect[i] == SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL || spellProto->Effect[i] == SPELL_EFFECT_WEAPON_PERCENT_DAMAGE || spellProto->Effect[i] == SPELL_EFFECT_WEAPON_DAMAGE || spellProto->Effect[i] == SPELL_EFFECT_NORMALIZED_WEAPON_DMG)
+        {    
+            hasWeaponDmgEffect = true;
+            break;
+        }
+    }
+
+    if (!(damageInfo->HitInfo & HITINFO_MISS) && hasWeaponDmgEffect) 
+    {
+        WeaponAttackType attType = GetWeaponAttackType(spellProto);
+        // on weapon hit casts
+        if(GetTypeId() == TYPEID_PLAYER && pVictim->isAlive())
+            ((Player*)this)->CastItemCombatSpell(pVictim, attType);
+    }
 }
 
 //TODO for melee need create structure as in
@@ -2929,10 +2952,6 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
 
     // Ranged attack cannot be parry/dodge only miss
     if (attType == RANGED_ATTACK)
-        //int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_RANGED_HIT)*100;- //missing something  but what??
-        //tmp+=deflect_chance;
-        //if (roll < tmp)
-            //return SPELL_MISS_DODGE;
         return SPELL_MISS_NONE;
 
     // Check for attack from behind
@@ -5803,6 +5822,41 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     CastSpell(this, 28682, true, castItem, triggeredByAura);
                     return (procEx & PROC_EX_CRITICAL_HIT); // charge update only at crit hits, no hidden cooldowns
                 }
+				// Empowered Fire
+                case 12654:
+                {
+                    if (Unit* caster = triggeredByAura->GetCaster())
+                    {
+                        if (pVictim != caster)
+                            return false;
+                        Unit::AuraList const& auras = caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
+                        {
+                            switch((*i)->GetId())
+                            {
+                                case 31656:
+                                case 31657:
+                                case 31658:
+                                    if(roll_chance_i((*i)->GetSpellProto()->procChance))
+                                    {
+                                        caster->CastSpell( caster, 67545, true );
+                                        return true;
+                                    }
+                                    break;
+                                default:
+                                    continue;
+                            }
+                            break;
+                        }
+                    }
+                    return false;
+                }
+				// Arcane Blast proc-off only from arcane school and not from self
+                case 36032:
+                {
+                    if(procSpell->EffectTriggerSpell[1] == 36032 || GetSpellSchoolMask(procSpell) != SPELL_SCHOOL_MASK_ARCANE)
+                        return false;
+                }
                 // Glyph of Ice Block
                 case 56372:
                 {
@@ -6429,6 +6483,49 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     break;
                 }
             }
+			// Deadly Poison
+            if (dummySpell->SpellIconID == 513)
+            {
+                if (pVictim->GetTypeId() != TYPEID_PLAYER)
+                    return false;
+
+                if (triggeredByAura->GetStackAmount() < dummySpell->StackAmount)
+                    return false;
+
+                Player *pCaster = ((Player*)pVictim);
+
+                Item* castItem = triggeredByAura->GetCastItemGUID() ? pCaster->GetItemByGuid(triggeredByAura->GetCastItemGUID()) : NULL;
+                
+                if (!castItem)
+                    return false;
+
+                Item *item = pCaster->GetWeaponForAttack(castItem->GetSlot() == EQUIPMENT_SLOT_MAINHAND ? OFF_ATTACK : BASE_ATTACK);
+                if (!item)
+                    return false;
+
+                // all poison enchantments is temporary
+                uint32 enchant_id = item->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT);
+                if (!enchant_id)
+                    return false;
+
+                SpellItemEnchantmentEntry const *pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
+                if (!pEnchant)
+                    return false;
+
+                for (int s = 0; s < 3; ++s)
+                {
+                    if (pEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
+                        continue;
+
+                    SpellEntry const* combatEntry = sSpellStore.LookupEntry(pEnchant->spellid[s]);
+                    if (!combatEntry || combatEntry->Dispel != DISPEL_POISON)
+                        continue;
+
+                    pVictim->CastSpell(this, combatEntry, true, item);
+                }
+
+                return true;
+            }
             // Cut to the Chase
             if (dummySpell->SpellIconID == 2909)
             {
@@ -6680,7 +6777,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Vengeance (damage calc on apply aura)
                 case 31801:
                 {
-                    if (effIndex != EFFECT_INDEX_0)         // effect 1,2 used by seal unleashing code
+                    if (effIndex != EFFECT_INDEX_0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))         // effect 1,2 used by seal unleashing code
                         return false;
 
                     // At melee attack or Hammer of the Righteous spell damage considered as melee attack
@@ -8221,6 +8318,27 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     // dummy basepoints or other customs
     switch(trigger_spell_id)
     {
+		// Auras which should proc on area aura source (caster in this case):
+        // Turn the Tables
+        case 52914:
+        case 52915:
+        case 52910:
+        // Honor Among Thieves
+        case 52916:
+        {
+            target = triggeredByAura->GetCaster();
+            if(!target)
+                return false;
+
+            if( cooldown && GetTypeId() == TYPEID_PLAYER && ((Player*)target)->HasSpellCooldown(trigger_spell_id))
+                return false;
+
+            target->CastSpell(target,trigger_spell_id,true,castItem,triggeredByAura);
+
+            if( cooldown && GetTypeId() == TYPEID_PLAYER )
+                ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
+            return true;
+        }
         // Cast positive spell on enemy target
         case 7099:  // Curse of Mending
         case 39647: // Curse of Mending
@@ -10011,7 +10129,10 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
     switch(spellProto->DmgClass)
     {
         case SPELL_DAMAGE_CLASS_NONE:
-            return false;
+        {
+            if (spellProto->Id != 33778) // Lifebloom final tick
+                return false;
+        }
         case SPELL_DAMAGE_CLASS_MAGIC:
         {
             if (schoolMask & SPELL_SCHOOL_MASK_NORMAL)
@@ -13595,6 +13716,7 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 break;
             }
             case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:
+			case SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE:
             case SPELL_AURA_MANA_SHIELD:
             case SPELL_AURA_OBS_MOD_MANA:
             case SPELL_AURA_MOD_STUN:
@@ -14465,7 +14587,7 @@ bool Unit::IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry con
     }
     // Aura added by spell can`t trogger from self (prevent drop charges/do triggers)
     // But except periodic triggers (can triggered from self)
-    if(procSpell && procSpell->Id == spellProto->Id && !(spellProto->procFlags & PROC_FLAG_ON_TAKE_PERIODIC))
+    if(procSpell && procSpell->Id == spellProto->Id && !(spellProto->procFlags & PROC_FLAG_ON_TAKE_PERIODIC) && aura->GetModifier()->m_auraname != SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE)
         return false;
 
     // Check if current equipment allows aura to proc

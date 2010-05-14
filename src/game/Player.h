@@ -641,6 +641,8 @@ enum AtLoginFlags
     AT_LOGIN_CUSTOMIZE         = 0x08,
     AT_LOGIN_RESET_PET_TALENTS = 0x10,
     AT_LOGIN_FIRST             = 0x20,
+	AT_LOGIN_CHANGE_FACTION	   = 0x40,
+	AT_LOGIN_CHANGE_RACE	   = 0x80
 };
 
 typedef std::map<uint32, QuestStatusData> QuestStatusMap;
@@ -2001,7 +2003,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void CheckExploreSystem(void);
 
         static uint32 TeamForRace(uint8 race);
-        uint32 GetTeam() const;
+        uint32 GetTeam() const { return m_team; }
 		TeamId GetTeamId() const { return m_team == ALLIANCE ? TEAM_ALLIANCE : TEAM_HORDE; }
         static uint32 getFactionForRace(uint8 race);
         void setFactionForRace(uint8 race);
@@ -2448,13 +2450,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         PlayerbotMgr* GetPlayerbotMgr() { return m_playerbotMgr; }
         void SetBotDeathTimer() { m_deathTimer = 0; }
 
-        //TEAMBG helpers
-        bool isInTeamBG() { return m_isInTeamBG; };
-        void SetTeamBG(bool isIn, uint8 side) { m_isInTeamBG = isIn; m_fakeTeam = side; };
-
-        uint8 getFakeTeam() { return m_fakeTeam; };
-        void SetFakeTeam(uint8 side) { m_fakeTeam = side; };
-        uint32 getOriginalTeam() { return TeamForRace(getRace()); };
     protected:
 
         uint32 m_contestedPvPTimer;
@@ -2775,10 +2770,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 		
 		// Battleground reward system
         uint32 m_FirstBGTime;
-
-        // TEAMBG helpers
-        bool m_isInTeamBG;
-        uint8 m_fakeTeam; // 0 nothing, 1 blue(ali), 2 red(horde)
 };
 
 void AddItemsSetItem(Player*player,Item *item);

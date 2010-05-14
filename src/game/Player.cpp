@@ -525,10 +525,6 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_lastFallZ = 0;
 
     m_flytimer = time(NULL);
-
-    //TeamBG helpers
-    m_isInTeamBG = false;
-    m_fakeTeam = 0;
 }
 
 Player::~Player ()
@@ -1572,8 +1568,15 @@ bool Player::BuildEnumData( QueryResult * result, WorldPacket * p_data )
         char_flags |= CHARACTER_FLAG_DECLINED;
 
     *p_data << uint32(char_flags);                          // character flags
-    // character customize flags
-    *p_data << uint32(atLoginFlags & AT_LOGIN_CUSTOMIZE ? CHAR_CUSTOMIZE_FLAG_CUSTOMIZE : CHAR_CUSTOMIZE_FLAG_NONE);
+    // character customize/faction/race change flags
+    if(atLoginFlags & AT_LOGIN_CUSTOMIZE)
+		*p_data << uint32(CHAR_CUSTOMIZE_FLAG_CUSTOMIZE);
+	else if(atLoginFlags & AT_LOGIN_CHANGE_FACTION)
+		*p_data << uint32(CHAR_CUSTOMIZE_FLAG_FACTION);
+	else if(atLoginFlags & AT_LOGIN_CHANGE_RACE)
+		*p_data << uint32(CHAR_CUSTOMIZE_FLAG_RACE);
+	else
+		*p_data << uint32(CHAR_CUSTOMIZE_FLAG_NONE);
     // First login
     *p_data << uint8(atLoginFlags & AT_LOGIN_FIRST ? 1 : 0);
 
@@ -6229,20 +6232,6 @@ uint32 Player::TeamForRace(uint8 race)
     return ALLIANCE;
 }
 
-//TEAMBG code
-uint32 Player::GetTeam() const
-{
-    if((!m_isInTeamBG || (m_isInTeamBG && !GetBattleGroundTypeId())) && !sMapMgr.isFactioned(GetMapId()))
-        return m_team;
-
-    switch(m_fakeTeam)
-    {
-        case 1: return ALLIANCE;
-        case 2: return HORDE;
-        default: return m_team;
-    }
-}
-
 uint32 Player::getFactionForRace(uint8 race)
 {
     ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
@@ -8741,7 +8730,6 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
     data.put<uint16>(count_pos,count);                     // set actual world state amount
 
     GetSession()->SendPacket(&data);
-
 }
 
 void Player::FillBGWeekendWorldStates(WorldPacket& data, uint32& count)
@@ -15293,21 +15281,6 @@ void Player::_LoadBGData(QueryResult* result)
     m_bgData.taxiPath[0]  = fields[7].GetUInt32();
     m_bgData.taxiPath[1]  = fields[8].GetUInt32();
     m_bgData.mountSpell   = fields[9].GetUInt32();
-	
-	//TEAMBG
-    if(fields[10].GetUInt32() != 0 && m_bgData.bgInstanceID != 0)
-    {
-        BattleGround *currentBg = sBattleGroundMgr.GetBattleGround(m_bgData.bgInstanceID, BATTLEGROUND_TYPE_NONE);
-        bool player_at_bg = currentBg && currentBg->IsPlayerInBattleGround(GetGUID());
-        if(player_at_bg && currentBg->GetStatus() != STATUS_WAIT_LEAVE)
-        {
-            SetTeamBG(true, fields[10].GetUInt32());
-            if(fields[10].GetUInt32() == 1)
-                setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_BLUE));
-            else
-                setFaction(sWorld.getConfig(CONFIG_UINT32_TEAM_BG_FACTION_RED));
-        }
-    }
 
     delete result;
 }
@@ -22403,9 +22376,9 @@ void Player::_SaveBGData()
     if (m_bgData.bgInstanceID)
     {
         /* guid, bgInstanceID, bgTeam, x, y, z, o, map, taxi[0], taxi[1], mountSpell */
-        CharacterDatabase.PExecute("INSERT INTO character_battleground_data VALUES ('%u', '%u', '%u', '%f', '%f', '%f', '%f', '%u', '%u', '%u', '%u', '%u')",
+        CharacterDatabase.PExecute("INSERT INTO character_battleground_data VALUES ('%u', '%u', '%u', '%f', '%f', '%f', '%f', '%u', '%u', '%u', '%u')",
             GetGUIDLow(), m_bgData.bgInstanceID, m_bgData.bgTeam, m_bgData.joinPos.coord_x, m_bgData.joinPos.coord_y, m_bgData.joinPos.coord_z,
-            m_bgData.joinPos.orientation, m_bgData.joinPos.mapid, m_bgData.taxiPath[0], m_bgData.taxiPath[1], m_bgData.mountSpell, m_fakeTeam);
+            m_bgData.joinPos.orientation, m_bgData.joinPos.mapid, m_bgData.taxiPath[0], m_bgData.taxiPath[1], m_bgData.mountSpell);
     }
 }
 
