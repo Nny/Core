@@ -570,7 +570,7 @@ struct BattlemasterListEntry
     //uint32 canJoinAsGroup;                                // 10 (0 or 1)
     DBCString name;                                         // 11
     uint32 maxGroupSize;                                    // 12 maxGroupSize, used for checking if queue as group
-    uint32 HolidayWorldStateId;                           // 13 new 3.1
+    uint32 HolidayWorldStateId;                             // 13 new 3.1
     uint32 minLevel;                                        // 14, min level (sync with PvPDifficulty.dbc content)
     uint32 maxLevel;                                        // 15, max level (sync with PvPDifficulty.dbc content)
 };
@@ -581,8 +581,7 @@ struct BattlemasterListEntry
     uint32 Unk1;
     uint32 Unk2;
     uint32 IsTournamentRealm;
-    char *categoryName[16];
-    uint32 categoryNameFlags;
+    char *categoryName;
 }*/
 
 /*struct Cfg_ConfigsEntry
@@ -740,8 +739,7 @@ struct CreatureTypeEntry
 {
     uint32    ID;                                           // 0
     uint32    Unk1;                                         // 1        0 for known categories and 3 for unknown one (3.0.9)
-    char*   Name[16];                                       // 2-17     name
-    //                                                      // 18       string flags
+    char*   Name;                                           // 2        name
 };*/
 
 struct CurrencyTypesEntry
@@ -954,15 +952,13 @@ struct GtRegenMPPerSptEntry
 /*struct HolidayDescriptionsEntry
 {
     uint32 ID;                                              // 0, this is NOT holiday id
-    //char*     name[16]                                    // 1-16 m_name_lang
-                                                            // 17 name flags
+    //char*     name;                                       // 1    m_name_lang
 };*/
 
 /*struct HolidayNamesEntry
 {
     uint32 ID;                                              // 0, this is NOT holiday id
-    //char*     name[16]                                    // 1-16 m_name_lang
-    // 17 name flags
+    //char*     name;                                       // 1    m_name_lang
 };*/
 
 struct HolidaysEntry
@@ -1146,7 +1142,7 @@ struct MapDifficultyEntry
     //uint32      Id;                                       // 0
     uint32      MapId;                                      // 1
     uint32      Difficulty;                                 // 2 (for arenas: arena slot)
-    //char*       areaTriggerText[16];                      // 3 text showed when transfer to map failed (missing requirements)
+    //char*       areaTriggerText;                          // 3 text showed when transfer to map failed (missing requirements)
     uint32      resetTime;                                  // 4
     uint32      maxPlayers;                                 // 5
     //char*       difficultyString;                         // 6
@@ -1283,9 +1279,8 @@ struct ScalingStatValuesEntry
 
 //struct SkillLineCategoryEntry{
 //    uint32    id;                                         // 0      m_ID
-//    char*     name[16];                                   // 1-17   m_name_lang
-//                                                          // 18 string flag
-//    uint32    displayOrder;                               // 19     m_sortIndex
+//    char*     name;                                       // 1      m_name_lang
+//    uint32    displayOrder;                               // 2      m_sortIndex
 //};
 
 //struct SkillRaceClassInfoEntry{
@@ -1709,7 +1704,7 @@ struct VehicleEntry
     uint32  m_uiLocomotionType;                             // 34
     float   m_msslTrgtImpactTexRadius;                      // 35
     uint32  m_uiSeatIndicatorType;                          // 36
-    uint32  m_powerType;                                    // 37, new in 3.1                                                        // 37, new in 3.1
+                                                            // 37, new in 3.1
                                                             // 38, new in 3.1
                                                             // 39, new in 3.1
 };
@@ -1763,26 +1758,7 @@ struct VehicleSeatEntry
     int32   m_uiSkin;                                       // 44
     uint32  m_flagsB;                                       // 45
                                                             // 46-57 added in 3.1, floats mostly
-	//uint32 unk[6];                                        // 58-63
-
-    bool IsUsable() const { return m_flags & 0x2000000; }
-};
-
-struct WMOAreaTableEntry
-{
-    uint32 Id;                                              // 0 index
-    int32 rootId;                                           // 1 used in root WMO
-    int32 adtId;                                            // 2 used in adt file
-    int32 groupId;                                          // 3 used in group WMO
-    //uint32 field4;
-    //uint32 field5;
-    //uint32 field6;
-    //uint32 field7;
-    //uint32 field8;
-    uint32 Flags;                                           // 9 used for indoor/outdoor determination
-    uint32 areaId;                                          // 10 link to AreaTableEntry.ID
-    //char *Name[16];
-    //uint32 nameFlags;
+    //uint32 unk[6];                                        // 58-63
 };
 
 struct WorldMapAreaEntry
