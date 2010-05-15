@@ -977,6 +977,20 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_AHBOT_BUYPRICE_BUYER  , "AuctionHouseBot.BuyPrice.Buyer"  , false);
 
     setConfig(CONFIG_UINT32_AHBOT_ITEMS_CYCLE   , "AuctionHouseBot.ItemsPerCycle"   , 200);
+
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MIN_ITEM_LEVEL    , "AuctionHouseBot.Items.ItemLevel.Min"         , 0);
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MAX_ITEM_LEVEL    , "AuctionHouseBot.Items.ItemLevel.Max"         , 0);
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MIN_REQ_LEVEL     , "AuctionHouseBot.Items.ReqLevel.Min"          , 0);
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MAX_REQ_LEVEL     , "AuctionHouseBot.Items.ReqLevel.Max"          , 0);
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MIN_SKILL_RANK    , "AuctionHouseBot.Items.ReqSkill.Min"          , 0);
+    setConfig(CONFIG_UINT32_AHBOT_ITEM_MAX_SKILL_RANK    , "AuctionHouseBot.Items.ReqSkill.Max"          , 0);
+
+    setConfig(CONFIG_UINT32_AHBOT_TG_MIN_ITEM_LEVEL      , "AuctionHouseBot.Tradegoods.ItemLevel.Min"    , 0);
+    setConfig(CONFIG_UINT32_AHBOT_TG_MAX_ITEM_LEVEL      , "AuctionHouseBot.Tradegoods.ItemLevel.Max"    , 0);
+    setConfig(CONFIG_UINT32_AHBOT_TG_MIN_REQ_LEVEL       , "AuctionHouseBot.Tradegoods.ReqLevel.Min"     , 0);
+    setConfig(CONFIG_UINT32_AHBOT_TG_MAX_REQ_LEVEL       , "AuctionHouseBot.Tradegoods.ReqLevel.Max"     , 0);
+    setConfig(CONFIG_UINT32_AHBOT_TG_MIN_SKILL_RANK      , "AuctionHouseBot.Tradegoods.ReqSkill.Min"     , 0);
+    setConfig(CONFIG_UINT32_AHBOT_TG_MAX_SKILL_RANK      , "AuctionHouseBot.Tradegoods.ReqSkill.Max"     , 0);
 }
 
 /// Initialize the World
@@ -1086,10 +1100,10 @@ void World::SetInitialWorldSettings()
     sSpellMgr.LoadSpellProcEvents();
 
     sLog.outString( "Loading Spell Bonus Data..." );
-    sSpellMgr.LoadSpellBonusess();
+    sSpellMgr.LoadSpellBonuses();                           // must be after LoadSpellChains
 
     sLog.outString( "Loading Spell Proc Item Enchant..." );
-    sSpellMgr.LoadSpellProcItemEnchant();                    // must be after LoadSpellChains
+    sSpellMgr.LoadSpellProcItemEnchant();                   // must be after LoadSpellChains
 
     sLog.outString( "Loading Aggro Spells Definitions...");
     sSpellMgr.LoadSpellThreats();
@@ -1429,15 +1443,15 @@ void World::SetInitialWorldSettings()
     sLog.outString("Starting Game Event system..." );
     uint32 nextGameEvent = sGameEventMgr.Initialize();
     m_timers[WUPDATE_EVENTS].SetInterval(nextGameEvent);    //depend on next event
+	
+	// Delete all characters which have been deleted X days before
+    Player::DeleteOldCharacters();
 
     sLog.outString("Starting AuctionHouseBot System...");
     auctionbot.Initialize();
 	
 	sLog.outString("Starting Autobroadcast system...");
-    // Delete all characters which have been deleted X days before
-    Player::DeleteOldCharacters();
-
-    sLog.outString("Starting Autobroadcast system by Xeross..." );
+    
     sLog.outString( "WORLD: World initialized" );
 
     uint32 uStartInterval = getMSTimeDiff(uStartTime, getMSTime());
