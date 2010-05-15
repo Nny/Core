@@ -31,6 +31,7 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
     uint32 spell_artisan      = 0;
     uint32 spell_master       = 0;
     uint32 spell_grand_master = 0;
+	uint32 spell_i_grand_master = 0;
 
     switch(trskill)
     {
@@ -40,7 +41,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 3464;
             spell_artisan      = 11611;
             spell_master       = 28596; // teached by 28597
-            spell_grand_master = 0;
+            spell_grand_master = 65281;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_BLACKSMITHING:
             spell_apprentice   = 2018;
@@ -48,7 +50,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 8768;
             spell_artisan      = 11454;
             spell_master       = 29844; // teached by 29845
-            spell_grand_master = 0;
+            spell_grand_master = 65282;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_COOKING:
             spell_apprentice   = 2550;
@@ -56,7 +59,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 3413;
             spell_artisan      = 18260;
             spell_master       = 33359; // teached by 33361
-            spell_grand_master = 0;
+            spell_grand_master = 65291;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_ENCHANTING:
             spell_apprentice   = 7411;
@@ -64,7 +68,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 7413;
             spell_artisan      = 13920;
             spell_master       = 28029; // teached by 28030
-            spell_grand_master = 0;
+            spell_grand_master = 65285;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_ENGINEERING:
             spell_apprentice   = 4036;
@@ -72,7 +77,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 4038;
             spell_artisan      = 12656;
             spell_master       = 30350; // teached by 30351
-            spell_grand_master = 0;
+            spell_grand_master = 61464;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_FIRSTAID:
             spell_apprentice   = 3273;
@@ -80,15 +86,17 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 7924;
             spell_artisan      = 10846;
             spell_master       = 27028; // teached by 27029
-            spell_grand_master = 0;
+            spell_grand_master = 65292;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_HERBALISM:
             spell_apprentice   = 2372;
             spell_journeyman   = 2373;
             spell_expert       = 3571;
             spell_artisan      = 11994;
-            spell_master       = 0;
-            spell_grand_master = 0;
+            spell_master       = 28696;
+            spell_grand_master = 50301;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_LEATHERWORKING:
             spell_apprentice   = 2108;
@@ -96,7 +104,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 20649;
             spell_artisan      = 10662;
             spell_master       = 32549; // teached by 32550
-            spell_grand_master = 0;
+            spell_grand_master = 65284;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_POISONS:
             spell_apprentice   = 0;
@@ -105,6 +114,7 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_artisan      = 0;
             spell_master       = 0;
             spell_grand_master = 0;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_TAILORING:
             spell_apprentice   = 3908;
@@ -112,7 +122,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 3910;
             spell_artisan      = 12180;
             spell_master       = 26790; // teached by 26791
-            spell_grand_master = 0;
+            spell_grand_master = 51308;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_MINING:
             spell_apprentice   = 2581;
@@ -120,7 +131,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 3568;
             spell_artisan      = 10249;
             spell_master       = 29354; // teached by 29355
-            spell_grand_master = 0;
+            spell_grand_master = 50309;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_FISHING:
             spell_apprentice   = 7733;
@@ -128,7 +140,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 7736;
             spell_artisan      = 18249;
             spell_master       = 33098; // teached by 33100
-            spell_grand_master = 0;
+            spell_grand_master = 65293;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_SKINNING:
             spell_apprentice   = 8615;
@@ -136,7 +149,8 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 8620;
             spell_artisan      = 10769;
             spell_master       = 32679; // teached by 32678
-            spell_grand_master = 0;
+            spell_grand_master = 65293;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_JEWELCRAFTING:
             spell_apprentice   = 25229; // teached by 25245
@@ -144,19 +158,33 @@ uint32 GetSkillLevel(Player *player,uint32 trskill)
             spell_expert       = 28894; // teached by 28896
             spell_artisan      = 28895; // teached by 28899
             spell_master       = 28897; // teached by 28901
-            spell_grand_master = 0;
+            spell_grand_master = 51310;
+			spell_i_grand_master = 0;
             break;
         case TRADESKILL_INSCRIPTION:
+            spell_apprentice   = 45375;
+            spell_journeyman   = 45376;
+            spell_expert       = 45377;
+            spell_artisan      = 45378;
+            spell_master       = 45379;
+            spell_grand_master = 65287;
+			spell_i_grand_master = 0;
+            break;
+		case TRADESKILL_ARCHAEOLOGY:
             spell_apprentice   = 0;
             spell_journeyman   = 0;
             spell_expert       = 0;
             spell_artisan      = 0;
             spell_master       = 0;
             spell_grand_master = 0;
+			spell_i_grand_master = 0;
             break;
     }
 
-    if (player->HasSpell(spell_grand_master))
+    if (player->HasSpell(spell_i_grand_master))
+        return TRADESKILL_LEVEL_I_GRAND_MASTER;
+	
+	if (player->HasSpell(spell_grand_master))
         return TRADESKILL_LEVEL_GRAND_MASTER;
 
     if (player->HasSpell(spell_master))

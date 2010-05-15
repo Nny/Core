@@ -38,6 +38,7 @@
 #define TRADESKILL_SKINNING              13
 #define TRADESKILL_JEWELCRAFTING         14
 #define TRADESKILL_INSCRIPTION           15
+#define TRADESKILL_ARCHAEOLOGY           16
 
 #define TRADESKILL_LEVEL_NONE            0
 #define TRADESKILL_LEVEL_APPRENTICE      1
@@ -46,6 +47,7 @@
 #define TRADESKILL_LEVEL_ARTISAN         4
 #define TRADESKILL_LEVEL_MASTER          5
 #define TRADESKILL_LEVEL_GRAND_MASTER    6
+#define TRADESKILL_LEVEL_I_GRAND_MASTER  7 //Illustrious
 
 // Gossip defines
 
