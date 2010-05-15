@@ -9990,6 +9990,15 @@ uint32 Unit::SpellDamageBonusTaken(Unit *pCaster, SpellEntry const *spellProto, 
     AuraList const& mModDamagePercentTaken = GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN);
     for(AuraList::const_iterator i = mModDamagePercentTaken.begin(); i != mModDamagePercentTaken.end(); ++i)
     {
+        // Pulsing Shockwave Aura - Loken (Halls of Ligtning)
+        // Probably should only affect triggered effects - else generating emence dmg from other spells
+        if ((*i)->GetSpellProto()->Id == 59414 && (spellProto->Id == 52942 || spellProto->Id == 59837 || spellProto->Id == 52924))
+        {
+            float fDistance = GetDistance(pCaster);
+            TakenTotal += fDistance < ATTACK_DISTANCE ? 500 : 50;
+            TakenTotalMod *= 1 + (fDistance < ATTACK_DISTANCE ? 0 : fDistance);
+        }
+
         if ((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spellProto))
             TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
     }
@@ -14937,8 +14946,8 @@ void Unit::ExitVehicle()
 
         float x = GetPositionX();
         float y = GetPositionY();
-        float z = GetPositionZ() + 2.0f;
-        GetClosePoint(x, y, z, 2.0f + v_size);
+        float z = GetPositionZ();
+        GetClosePoint(x, y, z, 0);
         SendMonsterMove(x, y, z, SPLINETYPE_NORMAL, SPLINEFLAG_WALKMODE, 0);
     }
 }
