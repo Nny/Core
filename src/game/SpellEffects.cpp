@@ -45,6 +45,7 @@
 #include "BattleGroundMgr.h"
 #include "BattleGround.h"
 #include "BattleGroundEY.h"
+#include "BattleGroundTB.h"
 #include "BattleGroundWS.h"
 #include "BattleGroundTP.h"
 #include "OutdoorPvPMgr.h"
@@ -3778,6 +3779,10 @@ void Spell::EffectOpenLock(SpellEffectIndex eff_idx)
                 if (bg->GetTypeID(true) == BATTLEGROUND_EY)
                     bg->EventPlayerClickedOnFlag(player, gameObjTarget);
                 return;
+
+				if (bg->GetTypeID(true) == BATTLEGROUND_TB)
+                    bg->EventPlayerClickedOnFlag(player, gameObjTarget);
+                return;
             }
         }
         // TODO: Add script for spell 41920 - Filling, becouse server it freze when use this spell
@@ -5482,6 +5487,9 @@ void Spell::EffectWeaponDmg(SpellEffectIndex eff_idx)
             {
                 int32 count = CalculateDamage(EFFECT_INDEX_2, unitTarget);
                 spell_bonus += int32(count * m_caster->GetTotalAttackPowerValue(BASE_ATTACK) / 100.0f);
+                
+                if( Aura * pAura = m_caster->GetAura(56816, EFFECT_INDEX_0))
+                    pAura->SendFakeAuraUpdate(56817, true);
             }
             break;
         }
@@ -5700,6 +5708,14 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
                         team = HORDE;
 
                     ((BattleGroundTP*)bg)->SetDroppedFlagGUID(pGameObj->GetGUID(),team);
+                }
+                break;
+            }
+			case 728:                                       //TB
+            {
+                if(bg && bg->GetTypeID(true)==BATTLEGROUND_TB && bg->GetStatus() == STATUS_IN_PROGRESS)
+                {
+                    ((BattleGroundTB*)bg)->SetDroppedFlagGUID(pGameObj->GetGUID());
                 }
                 break;
             }
@@ -6568,8 +6584,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         if ((familyFlag & UI64LIT(0x0000000000004000)) && aura->GetEffIndex() == EFFECT_INDEX_0)
                         {
                             // m_amount does not include RAP bonus - must be calculated 
-                            basePoint = m_caster->MeleeDamageBonusDone(target, aura->GetModifier()->m_amount, RANGED_ATTACK, aura->GetSpellProto(), DOT, aura->GetStackAmount());
-                            basePoint = basePoint * (aura->GetAuraMaxDuration() / aura->GetModifier()->periodictime) * 40 / 100; 
+                            basePoint = m_caster->MeleeDamageBonus(target, aura->GetModifier()->m_amount, RANGED_ATTACK, aura->GetSpellProto(), DOT, aura->GetStackAmount());
+              basePoint = basePoint * (aura->GetAuraMaxDuration() / aura->GetModifier()->periodictime) * 40 / 100; 
                             spellId = 53353;                // Chimera Shot - Serpent
                         }
 
@@ -7399,15 +7415,15 @@ void Spell::EffectLeapForward(SpellEffectIndex eff_idx)
             dy += _dy;
             MaNGOS::NormalizeMapCoord(dx);
             MaNGOS::NormalizeMapCoord(dy);
-            dz = cz;
+            dz = unitTarget->GetMap()->GetHeight(dx, dy, cz, useVmap);
              
             //Prevent climbing and go around object maybe 2.0f is to small? use 3.0f?
-            if( unitTarget->GetMap()->IsNextZcoordOK(dx, dy, dz, 3.0f) && (unitTarget->IsWithinLOS(dx, dy, dz)))
+            if( (dz-cz) < 2.0f && (dz-cz) > -2.0f && (unitTarget->IsWithinLOS(dx, dy, dz)))
             {
                 //No climb, the z differenze between this and prev step is ok. Store this destination for future use or check.
                 cx = dx;
                 cy = dy;
-                unitTarget->UpdateGroundPositionZ(cx, cy, cz, 3.0f);
+                cz = dz;
             }
             else
             {
@@ -7550,7 +7566,17 @@ void Spell::EffectCharge(SpellEffectIndex /*eff_idx*/)
     unitTarget->GetContactPoint(m_caster, x, y, z, 3.666666f);
 
     // Try to normalize Z coord cuz GetContactPoint do nothing with Z axis
-    unitTarget->UpdateGroundPositionZ(x, y, z, 5.0f);
+    bool useVmaps = false;
+    if( unitTarget->GetMap()->GetHeight(x, y, z, false) <  unitTarget->GetMap()->GetHeight(x, y, z, true) )
+        useVmaps = true;
+
+    float normalizedZ = unitTarget->GetMap()->GetHeight(x, y, z, useVmaps);
+    // check if its reacheable
+    if( (normalizedZ-z) < 10.0f && (normalizedZ-z) > -10.0f && unitTarget->IsWithinLOS(x, y, normalizedZ))
+    {
+        normalizedZ += 0.5f; // just safety-catch
+        z = normalizedZ;
+    }
 
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
         ((Creature *)unitTarget)->StopMoving();
@@ -7585,7 +7611,17 @@ void Spell::EffectCharge2(SpellEffectIndex /*eff_idx*/)
         return;
 
     // Try to normalize Z coord cuz GetContactPoint do nothing with Z axis
-    unitTarget->UpdateGroundPositionZ(x, y, z, 5.0f);
+    bool useVmaps = false;
+    if( unitTarget->GetMap()->GetHeight(x, y, z, false) <  unitTarget->GetMap()->GetHeight(x, y, z, true) )
+        useVmaps = true;
+
+    float normalizedZ = unitTarget->GetMap()->GetHeight(x, y, z, useVmaps);
+    // check if its reacheable
+    if( (normalizedZ-z) < 10.0f && (normalizedZ-z) > -10.0f && unitTarget->IsWithinLOS(x, y, normalizedZ))
+    {
+        normalizedZ += 0.5f; // just safety-catch
+        z = normalizedZ;
+    }
 
     // Only send MOVEMENTFLAG_WALK_MODE, client has strange issues with other move flags
     m_caster->MonsterMove(x, y, z, 1);

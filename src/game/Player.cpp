@@ -8423,6 +8423,43 @@ static WorldStatePair EY_world_states[] =
     { 0x0,   0x0 }
 };
 
+static WorldStatePair TB_world_states[] =
+{
+    { 0xac1, 0x0 },                                         // 7  2753 Horde Bases
+    { 0xac0, 0x0 },                                         // 8  2752 Alliance Bases
+    { 0xab6, 0x0 },                                         // 9  2742 Mage Tower - Horde conflict
+    { 0xab5, 0x0 },                                         // 10 2741 Mage Tower - Alliance conflict
+    { 0xab4, 0x0 },                                         // 11 2740 Fel Reaver - Horde conflict
+    { 0xab3, 0x0 },                                         // 12 2739 Fel Reaver - Alliance conflict
+    { 0xab2, 0x0 },                                         // 13 2738 Draenei - Alliance conflict
+    { 0xab1, 0x0 },                                         // 14 2737 Draenei - Horde conflict
+    { 0xab0, 0x0 },                                         // 15 2736 unk // 0 at start
+    { 0xaaf, 0x0 },                                         // 16 2735 unk // 0 at start
+    { 0xaad, 0x0 },                                         // 17 2733 Draenei - Horde control
+    { 0xaac, 0x0 },                                         // 18 2732 Draenei - Alliance control
+    { 0xaab, 0x1 },                                         // 19 2731 Draenei uncontrolled (1 - yes, 0 - no)
+    { 0xaaa, 0x0 },                                         // 20 2730 Mage Tower - Alliance control
+    { 0xaa9, 0x0 },                                         // 21 2729 Mage Tower - Horde control
+    { 0xaa8, 0x1 },                                         // 22 2728 Mage Tower uncontrolled (1 - yes, 0 - no)
+    { 0xaa7, 0x0 },                                         // 23 2727 Fel Reaver - Horde control
+    { 0xaa6, 0x0 },                                         // 24 2726 Fel Reaver - Alliance control
+    { 0xaa5, 0x1 },                                         // 25 2725 Fel Reaver uncontrolled (1 - yes, 0 - no)
+    { 0xaa4, 0x0 },                                         // 26 2724 Boold Elf - Horde control
+    { 0xaa3, 0x0 },                                         // 27 2723 Boold Elf - Alliance control
+    { 0xaa2, 0x1 },                                         // 28 2722 Boold Elf uncontrolled (1 - yes, 0 - no)
+    { 0xac5, 0x1 },                                         // 29 2757 Flag (1 - show, 0 - hide) - doesn't work exactly this way!
+    { 0xad2, 0x1 },                                         // 30 2770 Horde top-stats (1 - show, 0 - hide) // 02 -> horde picked up the flag
+    { 0xad1, 0x1 },                                         // 31 2769 Alliance top-stats (1 - show, 0 - hide) // 02 -> alliance picked up the flag
+    { 0xabe, 0x0 },                                         // 32 2750 Horde resources
+    { 0xabd, 0x0 },                                         // 33 2749 Alliance resources
+    { 0xa05, 0x8e },                                        // 34 2565 unk, constant?
+    { 0xaa0, 0x0 },                                         // 35 2720 Capturing progress-bar (100 -> empty (only grey), 0 -> blue|red (no grey), default 0)
+    { 0xa9f, 0x0 },                                         // 36 2719 Capturing progress-bar (0 - left, 100 - right)
+    { 0xa9e, 0x0 },                                         // 37 2718 Capturing progress-bar (1 - show, 0 - hide)
+    { 0xc0d, 0x17b },                                       // 38 3085 unk
+    // and some more ... unknown
+    { 0x0,   0x0 }
+};
 static WorldStatePair HP_world_states[] =                   // Hellfire Peninsula
 {
     { 0x9ba, 0x1 },                                         // 10
@@ -8726,6 +8763,12 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 bg->FillInitialWorldStates(data, count);
             else
                 FillInitialWorldState(data,count, TP_world_states);
+            break;
+		case 5108:                                          // TB
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_TB)
+                bg->FillInitialWorldStates(data, count);
+            else
+                FillInitialWorldState(data,count, TB_world_states);
             break;
         default:
             FillInitialWorldState(data,count, 0x914, 0x0);  // 7

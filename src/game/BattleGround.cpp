@@ -873,6 +873,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
 		case BATTLEGROUND_TP: return 14624;
         case BATTLEGROUND_AB: return 14879;
         case BATTLEGROUND_EY: return 22516;
+		case BATTLEGROUND_TB: return 22517;
         case BATTLEGROUND_NA: return 20200;
         default:              return 0;
     }
@@ -880,7 +881,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
 
 void BattleGround::RewardMark(Player *plr,uint32 count)
 {
-    switch(GetTypeID(true))
+    switch(GetTypeID())
     {
         case BATTLEGROUND_AV:
             if (count == ITEM_WINNER_COUNT)
@@ -901,6 +902,8 @@ void BattleGround::RewardMark(Player *plr,uint32 count)
                 RewardSpellCast(plr,SPELL_AB_MARK_LOSER);
             break;
         case BATTLEGROUND_EY:                               // no rewards
+		case BATTLEGROUND_TP:                               // no rewards
+		case BATTLEGROUND_TB:                               // no rewards
         default:
             break;
     }

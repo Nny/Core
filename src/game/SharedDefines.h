@@ -1167,16 +1167,6 @@ enum SpellPreventionType
     SPELL_PREVENTION_TYPE_PACIFY    = 2
 };
 
-enum DamageEffectType
-{
-    DIRECT_DAMAGE           = 0,                            // used for normal weapon damage (not for class abilities or spells)
-    SPELL_DIRECT_DAMAGE     = 1,                            // spell/class abilities damage
-    DOT                     = 2,
-    HEAL                    = 3,
-    NODAMAGE                = 4,                            // used also in case when damage applied to health but not applied to spell channelInterruptFlags/etc
-    SELF_DAMAGE             = 5
-};
-
 enum GameobjectTypes
 {
     GAMEOBJECT_TYPE_DOOR                   = 0,
@@ -2682,7 +2672,7 @@ enum BattleGroundTypeId
     BATTLEGROUND_IC            = 30,
     BATTLEGROUND_RB            = 32,                        // random battleground
     BATTLEGROUND_TP            = 108,                       // 4.0.0
-    BATTLEGROUND_BG            = 118                        // 4.0.0
+    BATTLEGROUND_TB            = 118                        // 4.0.0
 };
 
 #define MAX_BATTLEGROUND_TYPE_ID 119

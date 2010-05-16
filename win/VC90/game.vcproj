@@ -659,6 +659,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\BattleGroundTB.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\BattleGroundTB.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\BattleGroundTP.cpp"
 				>
 			</File>

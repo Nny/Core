@@ -328,6 +328,9 @@ void WorldSession::HandleBattleGroundPlayerPositionsOpcode( WorldPacket & /*recv
         case BATTLEGROUND_EY:
             //TODO : fix me!
             break;
+		case BATTLEGROUND_TB:
+            //TODO : fix me!
+            break;
         case BATTLEGROUND_AB:
         case BATTLEGROUND_AV:
             {
