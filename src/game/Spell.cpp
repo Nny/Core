@@ -190,10 +190,6 @@ void SpellCastTargets::Update(Unit* caster)
         ( m_unitTargetGUID == caster->GetObjectGuid() ? caster : ObjectAccessor::GetUnit(*caster, m_unitTargetGUID) ) :
     NULL;
 
-    if (m_unitTarget && m_unitTargetGUID != caster->GetObjectGuid() &&
-        !m_unitTarget->isVisibleForOrDetect(caster, caster, false))
-            m_unitTarget = NULL;
-
     m_itemTarget = NULL;
     if(caster->GetTypeId() == TYPEID_PLAYER)
     {
@@ -450,7 +446,7 @@ WorldObject* Spell::FindCorpseUsing()
 
     WorldObject* result = NULL;
 
-    T u_check(m_caster, max_range);
+    T u_check(((Player*)m_caster), max_range);
     MaNGOS::WorldObjectSearcher<T> searcher(m_caster, result, u_check);
 
     Cell::VisitGridObjects(m_caster, searcher, max_range);
@@ -460,6 +456,46 @@ WorldObject* Spell::FindCorpseUsing()
 
     return result;
 }
+
+void Spell::FillCustomTargetMap(uint32 i, UnitList &targetUnitMap)
+{
+    float radius;
+
+    if (m_spellInfo->EffectRadiusIndex[i])
+        radius = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[i]));
+    else
+        radius = GetSpellMaxRange(sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex));
+    // Resulting effect depends on spell that we want to cast
+    switch (m_spellInfo->Id)
+    {
+        case 46584: // Raise Dead
+        {
+            WorldObject* result = FindCorpseUsing <MaNGOS::RaiseDeadObjectCheck>  ();
+
+            if(result)
+            {
+                switch(result->GetTypeId())
+                {
+                    case TYPEID_UNIT:
+                        targetUnitMap.push_back((Unit*)result);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            break;
+        }
+        case 47496: // Ghoul's explode
+        {
+            FillAreaTargets(targetUnitMap,m_targets.m_destX, m_targets.m_destY,radius,PUSH_DEST_CENTER,SPELL_TARGETS_AOE_DAMAGE);
+            break;
+        }
+        break;
+    }
+}
+
+// explicitly instantiate for use in SpellEffects.cpp
+template WorldObject* Spell::FindCorpseUsing<MaNGOS::RaiseDeadObjectCheck>();
 
 void Spell::FillTargetMap()
 {
@@ -530,6 +566,10 @@ void Spell::FillTargetMap()
                     case 0:
                     case TARGET_EFFECT_SELECT:
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
+                        break;
+					case TARGET_AREAEFFECT_CUSTOM:
+					case TARGET_ALL_ENEMY_IN_AREA_INSTANT:
+						FillCustomTargetMap(i,tmpUnitMap);
                         break;
                     case TARGET_INNKEEPER_COORDINATES:
                     case TARGET_TABLE_X_Y_Z_COORDINATES:
@@ -610,6 +650,9 @@ void Spell::FillTargetMap()
                     case TARGET_EFFECT_SELECT:
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
                         break;
+					case TARGET_RANDOM_NEARBY_DEST: 
+						SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
+						break;
                     // most A/B target pairs is self->negative and not expect adding caster to target list
                     default:
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetB[i], tmpUnitMap);
@@ -1607,7 +1650,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
 			// Get a random point IN circle around the CASTER(!). Use sqrt(rand) to correct distribution when converting polar to Cartesian coordinates.
             radius *= sqrtf(rand_norm_f());
             // no 'break' expected since we use code in case TARGET_RANDOM_CIRCUMFERENCE_POINT!!! 
-    case TARGET_RANDOM_POINT_AROUND_CASTER:  
+        case TARGET_RANDOM_POINT_AROUND_CASTER:  
         case TARGET_RANDOM_CIRCUMFERENCE_POINT:
         {
             // Get a random point AT the CIRCUMREFERENCE(!).
@@ -1853,6 +1896,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
             if (IsPositiveEffect(m_spellInfo->Id, effIndex))
                 targetB = SPELL_TARGETS_FRIENDLY;
 
+            // hack - spell for quest 10233
+            if (m_spellInfo->Id == 34526)
+                targetB = SPELL_TARGETS_ALL;
+
             FillAreaTargets(targetUnitMap, m_caster->GetPositionX(), m_caster->GetPositionY(), radius, PUSH_DEST_CENTER, targetB);
 
             // exclude caster
@@ -1993,6 +2040,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 64904:                                 // Hymn of Hope
                     // target amount stored in parent spell dummy effect but hard to access
                     FillRaidOrPartyManaPriorityTargets(targetUnitMap, m_caster, m_caster, radius, 3, true, false, false);
+                    break;
+                case 45662:
+                    // encapsulate hack, to aoivd other hacks in spellbonusdmg-, crit-, etc. calc.
+                    FillAreaTargets(targetUnitMap, m_targets.m_destX, m_targets.m_destY, radius, PUSH_SELF_CENTER, SPELL_TARGETS_HOSTILE);
                     break;
                 default:
                     // selected friendly units (for casting objects) around casting object
@@ -2796,6 +2847,9 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
 
         // will show cast bar
         SendSpellStart();
+
+        if (m_caster->GetTypeId() == TYPEID_PLAYER)
+            ((Player*)m_caster)->AddGlobalCooldown(m_spellInfo,this);
     }
     // execute triggered without cast time explicitly in call point
     else if(m_timer == 0)
@@ -2841,6 +2895,8 @@ void Spell::cancel()
         {
         } break;
     }
+    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+        ((Player*)m_caster)->RemoveGlobalCooldown(m_spellInfo);
 
     finish(false);
     m_caster->RemoveDynObject(m_spellInfo->Id);
@@ -3316,6 +3372,9 @@ void Spell::update(uint32 difftime)
         {
             if(m_timer)
             {
+                if (m_targets.getUnitTarget() && !m_targets.getUnitTarget()->isVisibleForOrDetect(m_caster, m_caster, false))
+                    cancel();
+
                 if(difftime >= m_timer)
                     m_timer = 0;
                 else
@@ -3580,6 +3639,11 @@ void Spell::SendCastResult(Player* caster, SpellEntry const* spellInfo, uint8 ca
                     data << uint32(0);
                     break;
             }
+            break;
+		case SPELL_FAILED_REAGENTS:
+            // normally client checks reagents, just some script effects here
+            if(spellInfo->Id == 46584)                      // Raise Dead
+                data << uint32(37201);                      // Corpse Dust
             break;
         case SPELL_FAILED_TOTEMS:
             for(int i = 0; i < MAX_SPELL_TOTEMS; ++i)
@@ -4407,7 +4471,8 @@ SpellCastResult Spell::CheckCast(bool strict)
 
     // check cooldowns to prevent cheating (ignore passive spells, that client side visual only)
     if (m_caster->GetTypeId()==TYPEID_PLAYER && !(m_spellInfo->Attributes & SPELL_ATTR_PASSIVE) &&
-        ((Player*)m_caster)->HasSpellCooldown(m_spellInfo->Id) && !m_caster->isIgnoreUnitState(m_spellInfo))
+        ((Player*)m_caster)->HasSpellCooldown(m_spellInfo->Id) && !m_caster->isIgnoreUnitState(m_spellInfo) ||
+         (m_caster->GetTypeId()==TYPEID_PLAYER && strict && !m_IsTriggeredSpell && ((Player*)m_caster)->HasGlobalCooldown(m_spellInfo)))
     {
         if(m_triggeredByAuraSpell)
             return SPELL_FAILED_DONT_REPORT;
@@ -4844,7 +4909,8 @@ SpellCastResult Spell::CheckCast(bool strict)
                                 MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*m_caster, i_spellST->second.targetEntry, i_spellST->second.type != SPELL_TARGET_TYPE_DEAD, range);
                                 MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(m_caster, p_Creature, u_check);
 
-                                Cell::VisitGridObjects(m_caster, searcher, range);
+                                // Visit all, need to find also Pet* objects
+                                Cell::VisitAllObjects(m_caster, searcher, range);
 
                                 range = u_check.GetLastRange();
                             }
@@ -6812,7 +6878,7 @@ SpellCastResult Spell::CanOpenLock(SpellEffectIndex effIndex, uint32 lockId, Ski
     return SPELL_CAST_OK;
 }
 
-/*
+/**
  * Fill target list by units around (x,y) points at radius distance
 
  * @param targetUnitMap        Reference to target list that filled by function

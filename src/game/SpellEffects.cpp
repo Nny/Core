@@ -392,6 +392,17 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         damage = unitTarget->GetMaxHealth() / 2;
                         break;
                     }
+					// Explode
+                    case 47496:
+                    {
+                        // Special Effect only for caster (ghoul in this case)
+                        if (unitTarget->GetEntry() == 26125 && (unitTarget->GetGUID() == m_caster->GetGUID()))
+                        {
+                            // After explode the ghoul must be killed
+                            unitTarget->DealDamage(unitTarget, unitTarget->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                        }
+                        break;
+                    }
                     // Tympanic Tantrum
                     case 62775:
                     {
@@ -1564,6 +1575,64 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     ((Creature*)unitTarget)->ForcedDespawn();
                     return;
                 }
+                case 51866:                                 // Kick Nass
+                {
+                    // It is possible that Nass Heartbeat (spell id 61438) is involved in this
+                    // If so, unclear how it should work and using the below instead (even though it could be a bit hack-ish)
+
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    // Only own guardian pet
+                    if (m_caster != unitTarget->GetOwner())
+                        return;
+
+                    // This means we already set state (see below) and need to wait.
+                    if (unitTarget->hasUnitState(UNIT_STAT_ROOT))
+                        return;
+
+                    // Expecting pTargetDummy to be summoned by AI at death of target creatures.
+
+                    Creature* pTargetDummy = NULL;
+                    float fRange = GetSpellMaxRange(sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex));
+
+                    MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*m_caster, 28523, true, fRange*2);
+                    MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(m_caster, pTargetDummy, u_check);
+
+                    Cell::VisitGridObjects(m_caster, searcher, fRange*2);
+
+                    if (pTargetDummy)
+                    {
+                        if (unitTarget->hasUnitState(UNIT_STAT_FOLLOW | UNIT_STAT_FOLLOW_MOVE))
+                            unitTarget->GetMotionMaster()->MovementExpired();
+
+                        unitTarget->MonsterMove(pTargetDummy->GetPositionX(), pTargetDummy->GetPositionY(), pTargetDummy->GetPositionZ(), IN_MILLISECONDS);
+
+                        // Add state to temporarily prevent follow
+                        unitTarget->addUnitState(UNIT_STAT_ROOT);
+
+                        // Collect Hair Sample
+                        unitTarget->CastSpell(pTargetDummy, 51870, true);
+                    }
+
+                    return;
+                }
+                case 51872:                                 // Hair Sample Collected
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
+                        return;
+
+                    // clear state to allow follow again
+                    m_caster->clearUnitState(UNIT_STAT_ROOT);
+
+                    // Nass Kill Credit
+                    m_caster->CastSpell(m_caster, 51871, true);
+
+                    // Despawn dummy creature
+                    ((Creature*)unitTarget)->ForcedDespawn();
+
+                    return;
+                }
                 case 51964:                                 // Tormentor's Incense
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
@@ -2130,6 +2199,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                         if (spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && (spellInfo->SpellFamilyFlags & UI64LIT(0x0000024000000860)))
                             ((Player*)m_caster)->RemoveSpellCooldown((itr++)->first,true);
+                        // Glyph of Preparation
+                        else if (m_caster->HasAura(56819) && (spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && (spellInfo->SpellFamilyFlags & 0x40000010 || spellInfo->Id == 51722)))
+                            ((Player*)m_caster)->RemoveSpellCooldown((itr++)->first,true);
                         else
                             ++itr;
                     }
@@ -2474,6 +2546,18 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
+			// Corpse Explosion
+            if(m_spellInfo->SpellIconID == 1737)
+            {
+                // Living ghoul as a target
+                if (unitTarget->GetEntry() == 26125 && unitTarget->isAlive())
+                {
+                    int32 bp = unitTarget->GetMaxHealth()*0.25f;
+                    unitTarget->CastCustomSpell(unitTarget,47496,&bp,NULL,NULL,true);
+                }
+				else
+					return;
+            }
             // Death Coil
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x002000))
             {
@@ -2533,49 +2617,48 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 m_caster->CastCustomSpell(m_caster, 45470, &bp, NULL, NULL, true);
                 return;
             }
-			// Raise Dead
-			else if (m_spellInfo->Id == 46584)
-			{
-				if( unitTarget->isDead() && unitTarget->GetCreatureType()==CREATURE_TYPE_HUMANOID && unitTarget->getLevel() >= m_caster->getLevel()-3 )
-				{
-					if( m_caster->GetTypeId()==TYPEID_PLAYER && ((Player*)m_caster)->HasSpell(52143) )
-					{
-						m_caster->CastSpell(m_caster, 52150, true, NULL);
-						((Player*)m_caster)->SendCooldownEvent(m_spellInfo,52150, this); 
-						((Player*)m_caster)->RemoveSpellCooldown(52150, true);
-					}
-					else
-					{
-						m_caster->CastSpell(m_caster, 46585, true, NULL);
-						((Player*)m_caster)->SendCooldownEvent(m_spellInfo,46585, this); 
-						((Player*)m_caster)->RemoveSpellCooldown(46585, true);
-					}
-				}
-				else
-				{
-					if(((Player*)m_caster)->HasItemCount(37201,1))
-					{
-							  if( m_caster->GetTypeId()==TYPEID_PLAYER && ((Player*)m_caster)->HasSpell(52143) )
-						{
-							m_caster->CastSpell(m_caster, 52150, true, NULL);
-							((Player*)m_caster)->SendCooldownEvent(m_spellInfo,52150, this); 
-							((Player*)m_caster)->RemoveSpellCooldown(52150, true);
-								   
-						}
-						else
-						{
-							m_caster->CastSpell(m_caster, 46585, true, NULL);
-							((Player*)m_caster)->SendCooldownEvent(m_spellInfo,46585, this); 
-							((Player*)m_caster)->RemoveSpellCooldown(46585, true);
-							   
-						}
-						((Player*)m_caster)->DestroyItemCount(37201,1,true);
-					}
-					else 
-						m_caster->CastStop();
-					return;
-				}
-			}
+            // Raise dead effect
+            else if(m_spellInfo->Id == 46584) 
+            {
+                if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                    return;
+                // We can have a summoned pet/guardian only in 2 cases:
+                // 1. It was summoned from corpse in EffectScriptEffect.
+                if (getState() == SPELL_STATE_FINISHED)
+                    return;
+                // 2. Cooldown of Raise Dead is finished and we want to repeat the cast with active pet.
+                if (((Player*)m_caster)->GetPet())
+                {
+                    ((Player*)m_caster)->RemoveSpellCooldown(m_spellInfo->Id,true);
+                    SendCastResult(SPELL_FAILED_ALREADY_HAVE_SUMMON);
+                    return;
+                }
+                // We will get here ONLY if we have no corpse.
+                bool allow_cast = false;
+                // We do not need any reagent if we have Glyph of Raise Dead.
+                if (m_caster->HasAura(60200))
+                    allow_cast = true;
+                else
+                    // We need Corpse Dust to cast a spell.
+                    if (((Player*)m_caster)->HasItemCount(37201,1))
+                    {
+                        ((Player*)m_caster)->DestroyItemCount(37201,1,true);
+                        allow_cast = true;
+                    }
+                if (allow_cast)
+                {
+                    if (m_caster->HasSpell(52143))
+                        m_caster->CastSpell(m_caster,52150,true);
+                    else
+                        m_caster->CastSpell(m_caster,46585,true);
+                }
+                else
+                {
+                    ((Player*)m_caster)->RemoveSpellCooldown(m_spellInfo->Id,true);
+                    SendCastResult(SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW);
+                }
+                return;
+            }
             switch(m_spellInfo->Id)
             {
                 // Death Grip
@@ -5157,6 +5240,24 @@ void Spell::EffectSummonPet(SpellEffectIndex eff_idx)
 
     if(NewSummon->getPetType() == SUMMON_PET)
     {
+        // Remove Demonic Sacrifice auras (new pet)
+        Unit::AuraList const& auraClassScripts = m_caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+        for(Unit::AuraList::const_iterator itr = auraClassScripts.begin(); itr != auraClassScripts.end();)
+        {
+            if((*itr)->GetModifier()->m_miscvalue == 2228)
+            {
+                m_caster->RemoveAurasDueToSpell((*itr)->GetId());
+                itr = auraClassScripts.begin();
+            }
+            else
+                ++itr;
+        }
+		
+		// Summoned creature is ghoul.
+        if (NewSummon->GetEntry() == 26125)
+            // He must have energy bar instead of mana
+            NewSummon->setPowerType(POWER_ENERGY);
+
         // generate new name for summon pet
         std::string new_name = sObjectMgr.GeneratePetName(petentry);
         if(!new_name.empty())
@@ -6165,6 +6266,48 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     caster->CastSpell(caster, damage, false);
                     break;
                 }
+                case 51864:                                 // Player Summon Nass
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Summon Nass
+                    if (const SpellEntry* pSpell = sSpellStore.LookupEntry(51865))
+                    {
+                        // Only if he is not already there
+                        if (!m_caster->FindGuardianWithEntry(pSpell->EffectMiscValue[EFFECT_INDEX_0]))
+                        {
+                            m_caster->CastSpell(m_caster, pSpell, true);
+
+                            if (Pet* pPet = m_caster->FindGuardianWithEntry(pSpell->EffectMiscValue[EFFECT_INDEX_0]))
+                            {
+                                // Nass Periodic Say aura
+                                pPet->CastSpell(pPet, 51868, true);
+                            }
+                        }
+                    }
+                    return;
+                }
+                case 51889:                                 // Quest Accept Summon Nass
+                {
+                    // This is clearly for quest accept, is spell 51864 then for gossip and does pretty much the same thing?
+                    // Just "jumping" to what may be the "gossip-spell" for now, doing the same thing
+                    m_caster->CastSpell(m_caster, 51864, true);
+                    return;
+                }
+                case 51910:                                 // Kickin' Nass: Quest Completion
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    if (const SpellEntry* pSpell = sSpellStore.LookupEntry(51865))
+                    {
+                        // Is this all to be done at completion?
+                        if (Pet* pPet = m_caster->FindGuardianWithEntry(pSpell->EffectMiscValue[EFFECT_INDEX_0]))
+                            ((Player*)m_caster)->RemovePet(pPet, PET_SAVE_NOT_IN_SLOT);
+                    }
+                    return;
+				}
                 case 51904:                                 // Summon Ghouls Of Scarlet Crusade
                 {
                     if(!unitTarget)
@@ -6794,6 +6937,29 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     break;
                 }
+                case 46584:		 // Raise dead
+                {
+                    // We will get here ONLY when we have a corpse of humanoid that gives honor or XP.
+                    // If we have active pet, then we should not cast the spell again.
+                    if(m_caster->GetPet())
+                    {
+                        if (m_caster->GetTypeId()==TYPEID_PLAYER)
+                            ((Player*)m_caster)->RemoveSpellCooldown(m_spellInfo->Id,true);
+                        SendCastResult(SPELL_FAILED_ALREADY_HAVE_SUMMON);
+                        return;
+                    }
+                    // Do we have talent Master of Ghouls?
+                    if(m_caster->HasSpell(52143))
+                        // Summon ghoul as a pet
+                        m_caster->CastSpell(unitTarget->GetPositionX(),unitTarget->GetPositionY(),unitTarget->GetPositionZ(),52150,true);
+                    else
+                        // Summon ghoul as a guardian
+                     m_caster->CastSpell(unitTarget->GetPositionX(),unitTarget->GetPositionY(),unitTarget->GetPositionZ(),46585,true);
+					((Creature*)unitTarget)->setDeathState(ALIVE);
+                    // Used to prevent further EffectDummy execution
+                    finish();
+                    return;//break;	
+                }
             }
             break;
         }
@@ -7391,7 +7557,7 @@ void Spell::EffectLeapForward(SpellEffectIndex eff_idx)
         float angle = unitTarget->GetOrientation();
         unitTarget->GetPosition(cx,cy,cz);
           
-        //Check use of vamps//
+        //Check use of vmaps//
         bool useVmap = false;
         bool swapZone = true;
 
@@ -7560,7 +7726,10 @@ void Spell::EffectCharge(SpellEffectIndex /*eff_idx*/)
     //TODO: research more ContactPoint/attack distance.
     //3.666666 instead of ATTACK_DISTANCE(5.0f) in below seem to give more accurate result.
     float x, y, z;
-    unitTarget->GetContactPoint(m_caster, x, y, z, 3.666666f);
+    unitTarget->GetContactPoint(m_caster, x, y, z, 3.6f);
+
+    // Try to normalize Z coord cuz GetContactPoint do nothing with Z axis
+    unitTarget->UpdateGroundPositionZ(x, y, z, 5.0f);
 
     // Try to normalize Z coord cuz GetContactPoint do nothing with Z axis
     unitTarget->UpdateGroundPositionZ(x, y, z, 5.0f);
@@ -7593,7 +7762,7 @@ void Spell::EffectCharge2(SpellEffectIndex /*eff_idx*/)
             ((Creature *)unitTarget)->StopMoving();
     }
     else if (unitTarget && unitTarget != m_caster)
-        unitTarget->GetContactPoint(m_caster, x, y, z, 3.666666f);
+        unitTarget->GetContactPoint(m_caster, x, y, z, 3.6f);
     else
         return;
 

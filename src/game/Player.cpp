@@ -354,6 +354,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
     m_regenTimer = 0;
     m_weaponChangeTimer = 0;
+    m_petScalingUpdateTimer = 0;
 
     m_zoneUpdateId = 0;
     m_zoneUpdateTimer = 0;
@@ -461,7 +462,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_anti_TeleTime = 0;
     m_CanFly=false;
     /////////////////////////////////
- 
+
     m_mailsUpdated = false;
     unReadMails = 0;
     m_nextMailDelivereTime = 0;
@@ -523,6 +524,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
     m_lastFallTime = 0;
     m_lastFallZ = 0;
+    m_globalCooldowns.clear();
 
     m_flytimer = time(NULL);
 }
@@ -1152,6 +1154,17 @@ void Player::Update( uint32 p_time )
         m_nextMailDelivereTime = 0;
     }
 
+    for (std::map<uint32, uint32>::iterator itr = m_globalCooldowns.begin(); itr != m_globalCooldowns.end(); ++itr)
+    {
+        if (itr->second)
+        {
+            if (itr->second > p_time)
+                itr->second -= p_time;
+            else
+                itr->second = 0;
+        }
+    }
+
     //used to implement delayed far teleports
     SetCanDelayTeleport(true);
     Unit::Update( p_time );
@@ -1432,10 +1445,20 @@ void Player::Update( uint32 p_time )
     // group update
     SendUpdateToOutOfRangeGroupMembers();
 
-    Pet* pet = GetPet();
-    if(pet && !pet->IsWithinDistInMap(this, GetMap()->GetVisibilityDistance()) && (GetCharmGUID() && (pet->GetGUID() != GetCharmGUID())))
+    if (Pet* pet = GetPet())
     {
-        RemovePet(pet, PET_SAVE_NOT_IN_SLOT, true);
+        if (!pet->IsWithinDistInMap(this, GetMap()->GetVisibilityDistance()) && (GetCharmGUID() && (pet->GetGUID() != GetCharmGUID())))
+            RemovePet(pet, PET_SAVE_NOT_IN_SLOT, true);
+        else if (m_petScalingUpdateTimer)
+        {
+            if (m_petScalingUpdateTimer <= p_time)
+            {
+                pet->UpdateScalingAuras();
+                m_petScalingUpdateTimer = 0;
+            }
+            else
+                m_petScalingUpdateTimer -= p_time;
+        }
     }
 
     //we should execute delayed teleports only for alive(!) players
@@ -4368,7 +4391,7 @@ void Player::DeleteOldCharacters(uint32 keepDays)
     QueryResult *resultChars = CharacterDatabase.PQuery("SELECT guid, deleteInfos_Account FROM characters WHERE deleteDate IS NOT NULL AND deleteDate < '" UI64FMTD "'", uint64(time(NULL) - time_t(keepDays * DAY)));
     if (resultChars)
     {
-        sLog.outString("Player::DeleteOldChars: Found %u character(s) to delete",resultChars->GetRowCount());
+        sLog.outString("Player::DeleteOldChars: Found %u character(s) to delete",uint32(resultChars->GetRowCount()));
         do
         {
             Field *charFields = resultChars->Fetch();
@@ -8330,6 +8353,8 @@ static WorldStatePair WS_world_states[] =
     { 0x641, 0x3 },                                         // 12 1601 unk (max flag captures?)
     { 0x922, 0x1 },                                         // 13 2338 horde (0 - hide, 1 - flag ok, 2 - flag picked up (flashing), 3 - flag picked up (not flashing)
     { 0x923, 0x1 },                                         // 14 2339 alliance (0 - hide, 1 - flag ok, 2 - flag picked up (flashing), 3 - flag picked up (not flashing)
+    { 0x1097,0x1 },                                         // 15 4247 show time limit?
+    { 0x1098,0x19 },                                        // 16 4248 time remaining in minutes
     { 0x0,   0x0 }
 };
 
@@ -17980,7 +18005,7 @@ void Player::RemovePet(Pet* pet, PetSaveMode mode, bool returnreagent)
     if (pet && m_temporaryUnsummonedPetNumber && m_temporaryUnsummonedPetNumber != pet->GetCharmInfo()->GetPetNumber() && mode == PET_SAVE_AS_CURRENT)
         mode = PET_SAVE_NOT_IN_SLOT;
 
-    if (returnreagent && pet && mode != PET_SAVE_AS_CURRENT && !InBattleGround())
+    if(mode != PET_SAVE_AS_CURRENT && !InBattleGround())
     {
         //returning of reagents only for players, so best done here
         uint32 spellId = pet ? pet->GetUInt32Value(UNIT_CREATED_BY_SPELL) : m_oldpetspell;      // this is nonsense, pet will always be != NULL here
@@ -18315,6 +18340,17 @@ void Player::RemovePetActionBar()
     WorldPacket data(SMSG_PET_SPELLS, 8);
     data << uint64(0);
     SendDirectMessage(&data);
+}
+
+void Player::UpdatePetScalingAuras()
+{
+    Pet* pet = GetPet();
+    if (!pet)
+        return;
+
+    // pet scaling auras will be updated with delay, to minimize cpu cycles
+    if (!m_petScalingUpdateTimer)
+        m_petScalingUpdateTimer = 1000;
 }
 
 bool Player::IsAffectedBySpellmod(SpellEntry const *spellInfo, SpellModifier *mod, Spell const* spell)
@@ -21778,7 +21814,7 @@ void Player::HandleFall(MovementInfo const& movementInfo)
 {
     // calculate total z distance of the fall
     float z_diff = (m_lastFallZ >= m_anti_BeginFallZ ? m_lastFallZ : m_anti_BeginFallZ) - movementInfo.GetPos()->z;
-     
+
     m_anti_BeginFallZ=INVALID_HEIGHT;
     DEBUG_LOG("zDiff = %f", z_diff);
 
@@ -22402,19 +22438,33 @@ void Player::_SaveEquipmentSets()
                 ++itr;
                 break;                                      // nothing do
             case EQUIPMENT_SET_CHANGED:
+            {
+                // prevent SQL injection
+                std::string db_IconName = eqset.IconName;
+                std::string db_Name = eqset.Name;
+                CharacterDatabase.escape_string(db_IconName);
+                CharacterDatabase.escape_string(db_Name);
                 CharacterDatabase.PExecute("UPDATE character_equipmentsets SET name='%s', iconname='%s', item0='%u', item1='%u', item2='%u', item3='%u', item4='%u', item5='%u', item6='%u', item7='%u', item8='%u', item9='%u', item10='%u', item11='%u', item12='%u', item13='%u', item14='%u', item15='%u', item16='%u', item17='%u', item18='%u' WHERE guid='%u' AND setguid='"UI64FMTD"' AND setindex='%u'",
-                    eqset.Name.c_str(), eqset.IconName.c_str(), eqset.Items[0], eqset.Items[1], eqset.Items[2], eqset.Items[3], eqset.Items[4], eqset.Items[5], eqset.Items[6], eqset.Items[7],
+                    db_Name.c_str(), db_IconName.c_str(), eqset.Items[0], eqset.Items[1], eqset.Items[2], eqset.Items[3], eqset.Items[4], eqset.Items[5], eqset.Items[6], eqset.Items[7],
                     eqset.Items[8], eqset.Items[9], eqset.Items[10], eqset.Items[11], eqset.Items[12], eqset.Items[13], eqset.Items[14], eqset.Items[15], eqset.Items[16], eqset.Items[17], eqset.Items[18], GetGUIDLow(), eqset.Guid, index);
                 eqset.state = EQUIPMENT_SET_UNCHANGED;
                 ++itr;
                 break;
+            }
             case EQUIPMENT_SET_NEW:
+            {
+                // prevent SQL injection
+                std::string db_IconName = eqset.IconName;
+                std::string db_Name = eqset.Name;
+                CharacterDatabase.escape_string(db_IconName);
+                CharacterDatabase.escape_string(db_Name);
                 CharacterDatabase.PExecute("INSERT INTO character_equipmentsets VALUES ('%u', '"UI64FMTD"', '%u', '%s', '%s', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u')",
-                    GetGUIDLow(), eqset.Guid, index, eqset.Name.c_str(), eqset.IconName.c_str(), eqset.Items[0], eqset.Items[1], eqset.Items[2], eqset.Items[3], eqset.Items[4], eqset.Items[5], eqset.Items[6], eqset.Items[7],
+                    GetGUIDLow(), eqset.Guid, index, db_Name.c_str(), db_IconName.c_str(), eqset.Items[0], eqset.Items[1], eqset.Items[2], eqset.Items[3], eqset.Items[4], eqset.Items[5], eqset.Items[6], eqset.Items[7],
                     eqset.Items[8], eqset.Items[9], eqset.Items[10], eqset.Items[11], eqset.Items[12], eqset.Items[13], eqset.Items[14], eqset.Items[15], eqset.Items[16], eqset.Items[17], eqset.Items[18]);
                 eqset.state = EQUIPMENT_SET_UNCHANGED;
                 ++itr;
                 break;
+            }
             case EQUIPMENT_SET_DELETED:
                 CharacterDatabase.PExecute("DELETE FROM character_equipmentsets WHERE setguid="UI64FMTD, eqset.Guid);
                 m_EquipmentSets.erase(itr++);
@@ -22711,6 +22761,40 @@ void Player::SendDuelCountdown(uint32 counter)
     WorldPacket data(SMSG_DUEL_COUNTDOWN, 4);
     data << uint32(counter);                                // seconds
     GetSession()->SendPacket(&data);
+}
+
+void Player::AddGlobalCooldown(SpellEntry const *spellInfo, Spell *spell)
+{
+    if (!spellInfo || !spellInfo->StartRecoveryTime)
+        return;
+
+    float cdTime = float(spellInfo->StartRecoveryTime);
+
+    if (!(spellInfo->Attributes & (SPELL_ATTR_UNK4|SPELL_ATTR_PASSIVE)))
+        cdTime *= GetFloatValue(UNIT_MOD_CAST_SPEED);
+    else if ((spellInfo->Attributes & SPELL_ATTR_RANGED) && !spell->IsAutoRepeat())
+        cdTime *= m_modAttackSpeedPct[RANGED_ATTACK];
+
+    ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME_OLD, cdTime, spell);
+    if (cdTime > 0)
+        m_globalCooldowns[spellInfo->StartRecoveryCategory] = uint32(cdTime);
+}
+
+bool Player::HasGlobalCooldown(SpellEntry const *spellInfo) const
+{
+    if (!spellInfo)
+        return false;
+
+    std::map<uint32, uint32>::const_iterator itr = m_globalCooldowns.find(spellInfo->StartRecoveryCategory);
+    return itr != m_globalCooldowns.end() && (itr->second > sWorld.GetDiffTime());
+}
+
+void Player::RemoveGlobalCooldown(SpellEntry const *spellInfo)
+{
+    if (!spellInfo)
+        return;
+
+    m_globalCooldowns[spellInfo->StartRecoveryCategory] = 0;
 }
 
 bool Player::IsImmunedToSpellEffect(SpellEntry const* spellInfo, SpellEffectIndex index) const

@@ -626,6 +626,22 @@ void Aura::SetModifier(AuraType t, int32 a, uint32 pt, int32 miscValue)
     m_modifier.periodictime = pt;
 }
 
+void Aura::UpdateModifierAmount(int32 amount)
+{
+    // use this method, to modify modifier.amount when aura is already applied
+    AuraType aura = m_modifier.m_auraname;
+
+    SetInUse(true);
+    if(aura < TOTAL_AURAS)
+    {
+        // maybe we can find a better way here?
+        (*this.*AuraHandler [aura])(false, true);
+        m_modifier.m_amount = amount;
+        (*this.*AuraHandler [aura])(true, true);
+    }
+    SetInUse(false);
+}
+
 void Aura::Update(uint32 diff)
 {
     if (m_duration > 0)
@@ -2674,6 +2690,16 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 m_target->CastSpell(m_target, 47287, true, NULL, this);
                 return;
             }
+            case 51870:                                     // Collect Hair Sample
+            {
+                if (Unit* pCaster = GetCaster())
+                {
+                    if (m_removeMode == AURA_REMOVE_BY_DEFAULT)
+                        pCaster->CastSpell(m_target, 51872, true, NULL, this);
+                }
+
+                return;
+            }
             case 58600:                                     // Restricted Flight Area
             {
                 // Remove Flight Auras
@@ -2920,7 +2946,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     int32 bp0 = m_modifier.m_amount;
 
                     if (Unit* caster = GetCaster())
-                        m_target->CastCustomSpell(caster,48210,&bp0,NULL,NULL,true,NULL,this,GetCasterGUID());
+                        m_target->CastCustomSpell(caster,48210,&bp0,NULL,NULL,true,0,0, caster->GetObjectGuid());
                 }
             }
             break;
@@ -6528,8 +6554,49 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             // Illusionary Barrier
             if(GetId() == 57350 && !apply && m_target->getPowerType() == POWER_MANA)
             {
-                cast_at_remove = true;
-                spellId1 = 60242;                           // Darkmoon Card: Illusion
+                // Illusionary Barrier
+                case 57350:
+                {
+                    if(!apply && m_target->getPowerType() == POWER_MANA)
+                    {
+                        cast_at_remove = true;
+                        spellId1 = 60242;                       // Darkmoon Card: Illusion
+                        break;
+                    }
+                }
+                // Encapsulate
+                case 45661:
+                {
+                    spellId1 = 45665;
+                    break;
+                }
+                // Nether Portal - Perseverance
+                case 30421:
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;
+                    spellId1 = 38637;                           // Nether Exhaustion
+                    break;
+                }
+                // Nether Portal - Serenity
+                case 30422:
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;                      // Nether Exhaustion
+                    spellId1 = 38638;
+                    break;
+                }
+                // Nether Portal  - Dominance
+                case 30423:
+                {
+                    if (apply)
+                        return;
+                    cast_at_remove = true;
+                    spellId1 = 38639;                           // Nether Exhaustion
+                    break;
+                }
             }
             else
                 return;

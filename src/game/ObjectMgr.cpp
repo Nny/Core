@@ -2433,8 +2433,8 @@ void ObjectMgr::LoadPetLevelInfo()
 {
     // Loading levels data
     {
-        //                                                 0               1      2   3     4    5    6    7     8    9
-        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor FROM pet_levelstats");
+        //                                                 0               1      2   3     4    5    6    7     8    9      10      11
+        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor, mindmg, maxdmg FROM pet_levelstats");
 
         uint32 count = 0;
 
@@ -2491,6 +2491,8 @@ void ObjectMgr::LoadPetLevelInfo()
             pLevelInfo->health = fields[2].GetUInt16();
             pLevelInfo->mana   = fields[3].GetUInt16();
             pLevelInfo->armor  = fields[9].GetUInt16();
+            pLevelInfo->mindmg = fields[10].GetUInt16();
+            pLevelInfo->maxdmg = fields[11].GetUInt16();
 
             for (int i = 0; i < MAX_STATS; i++)
             {
@@ -4773,6 +4775,8 @@ void ObjectMgr::LoadGossipScripts()
 void ObjectMgr::LoadCreatureMovementScripts()
 {
     LoadScripts(sCreatureMovementScripts, "creature_movement_scripts");
+
+    // checks are done in WaypointManager::Load
 }
 
 void ObjectMgr::LoadPageTexts()
@@ -8735,7 +8739,7 @@ uint32 ObjectMgr::GetScriptId(const char *name)
     return uint32(itr - m_scriptNames.begin());
 }
 
-void ObjectMgr::CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids)
+void ObjectMgr::CheckScriptTexts(ScriptMapMap const& scripts,std::set<int32>& ids)
 {
     for(ScriptMapMap::const_iterator itrMM = scripts.begin(); itrMM != scripts.end(); ++itrMM)
     {
@@ -8766,13 +8770,13 @@ void ObjectMgr::LoadDbScriptStrings()
         if(GetMangosStringLocale(i))
             ids.insert(i);
 
-    CheckScripts(sQuestEndScripts,ids);
-    CheckScripts(sQuestStartScripts,ids);
-    CheckScripts(sSpellScripts,ids);
-    CheckScripts(sGameObjectScripts,ids);
-    CheckScripts(sEventScripts,ids);
-    CheckScripts(sGossipScripts,ids);
-    CheckScripts(sCreatureMovementScripts,ids);
+    CheckScriptTexts(sQuestEndScripts,ids);
+    CheckScriptTexts(sQuestStartScripts,ids);
+    CheckScriptTexts(sSpellScripts,ids);
+    CheckScriptTexts(sGameObjectScripts,ids);
+    CheckScriptTexts(sEventScripts,ids);
+    CheckScriptTexts(sGossipScripts,ids);
+    CheckScriptTexts(sCreatureMovementScripts,ids);
 
     sWaypointMgr.CheckTextsExistance(ids);
 
