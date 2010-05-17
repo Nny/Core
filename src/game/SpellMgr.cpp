@@ -3514,11 +3514,11 @@ SpellCastResult SpellMgr::GetSpellAllowedInLocationError(SpellEntry const *spell
                 && bg->GetStatus() != STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         }
         case 23333:                                         // Warsong Flag
-			return map_id == 489 || map_id == 726 && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+			return (map_id == 489 || map_id == 726) && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         case 23335:                                         // Silverwing Flag
-            return map_id == 489 || map_id == 726 && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return (map_id == 489 || map_id == 726) && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         case 34976:                                         // Netherstorm Flag
-            return map_id == 566 || map_id == 728 && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return (map_id == 566 || map_id == 728) && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         case 2584:                                          // Waiting to Resurrect
         case 42792:                                         // Recently Dropped Flag
         case 43681:                                         // Inactive

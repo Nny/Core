@@ -88,7 +88,7 @@ void BattleGroundTP::Update(uint32 diff)
             }
         }
 
-        if (m_EndTimer < diff)
+        if (m_EndTimer <= diff)
         {
             uint32 allianceScore = GetTeamScore(ALLIANCE);
             uint32 hordeScore    = GetTeamScore(HORDE);
