@@ -90,7 +90,6 @@ enum BG_TP_Events
 {
     TP_EVENT_FLAG_A               = 0,
     TP_EVENT_FLAG_H               = 1,
-    // spiritguides will spawn (same moment, like TP_EVENT_DOOR_OPEN)
     TP_EVENT_SPIRITGUIDES_SPAWN   = 2
 };
 
