@@ -135,6 +135,7 @@ class ChatHandler
         bool HandleCharacterDeletedOldCommand(const char* args);
         bool HandleCharacterEraseCommand(const char* args);
         bool HandleCharacterLevelCommand(const char* args);
+		bool HandleCharacterGMLevelCommand(const char* args);
         bool HandleCharacterRenameCommand(const char * args);
         bool HandleCharacterReputationCommand(const char* args);
         bool HandleCharacterTitlesCommand(const char* args);
@@ -431,10 +432,11 @@ class ChatHandler
         bool HandleServerIdleRestartCommand(const char* args);
         bool HandleServerIdleShutDownCommand(const char* args);
         bool HandleServerInfoCommand(const char* args);
+        bool HandleServerLogFilterCommand(const char* args);
+        bool HandleServerLogLevelCommand(const char* args);
         bool HandleServerMotdCommand(const char* args);
         bool HandleServerPLimitCommand(const char* args);
         bool HandleServerRestartCommand(const char* args);
-        bool HandleServerSetLogLevelCommand(const char* args);
         bool HandleServerSetMotdCommand(const char* args);
         bool HandleServerShutDownCommand(const char* args);
         bool HandleServerShutDownCancelCommand(const char* args);

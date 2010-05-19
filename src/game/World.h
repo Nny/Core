@@ -178,7 +178,9 @@ enum eConfigUInt32Values
     CONFIG_UINT32_TIMERBAR_BREATH_MAX,
     CONFIG_UINT32_TIMERBAR_FIRE_GMLEVEL,
     CONFIG_UINT32_TIMERBAR_FIRE_MAX,
-	CONFIG_UINT32_CHARDELETE_KEEP_DAYS,
+    CONFIG_UINT32_MIN_LEVEL_STAT_SAVE,
+    CONFIG_UINT32_NUMTHREADS,
+    CONFIG_UINT32_CHARDELETE_KEEP_DAYS,
     CONFIG_UINT32_CHARDELETE_METHOD,
     CONFIG_UINT32_CHARDELETE_MIN_LEVEL,
 
@@ -203,9 +205,6 @@ enum eConfigUInt32Values
     CONFIG_UINT32_AHBOT_TG_MAX_SKILL_RANK,
     /* End AHBot*/
 
-    CONFIG_UINT32_MIN_LEVEL_STAT_SAVE,
-    CONFIG_UINT32_NUMTHREADS,
-	
 	/* Honor Options for BG */
     CONFIG_UINT32_HONORABLE_KILL,
     CONFIG_UINT32_BONUS_HONOR_AB_WIN,
@@ -229,8 +228,6 @@ enum eConfigUInt32Values
     CONFIG_UINT32_TEAM_BG_BUFF_BLUE,
     CONFIG_UINT32_TEAM_BG_BUFF_RED,
     CONFIG_UINT32_RANDOM_BG_RESET_HOUR,
-    CONFIG_UINT32_FACTIONED_MAP_FACTION,
-    CONFIG_UINT32_FACTIONED_MAP_TEAM,
 
 	/* Darkrulerz' customs */
 	CONFIG_UINT32_PVP_ID_1,
@@ -248,7 +245,6 @@ enum eConfigUInt32Values
     CONFIG_UINT32_VMAP_INDOOR_INTERVAL,
 
     CONFIG_UINT32_VALUE_COUNT
-	
 };
 
 /// Configuration elements
@@ -668,6 +664,7 @@ class World
         bool IsFFAPvPRealm() { return getConfig(CONFIG_UINT32_GAME_TYPE) == REALM_TYPE_FFA_PVP; }
 
         void KickAll();
+        void ResetRealmId();
         void KickAllLess(AccountTypes sec);
         BanReturn BanAccount(BanMode mode, std::string nameOrIP, std::string duration, std::string reason, std::string author);
         bool RemoveBanAccount(BanMode mode, std::string nameOrIP);
@@ -727,6 +724,7 @@ class World
         //used Script version
         void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
+        ACE_Thread_Mutex m_spellUpdateLock;
 
     protected:
         void _UpdateGameTime();

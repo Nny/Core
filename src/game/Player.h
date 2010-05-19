@@ -1094,7 +1094,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         std::string afkMsg;
         std::string dndMsg;
 
-        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair);
+        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair, BarberShopStyleEntry const* newSkin=NULL);
 
         PlayerSocial *GetSocial() { return m_social; }
 
@@ -1367,7 +1367,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void AddArmorProficiency(uint32 newflag) { m_ArmorProficiency |= newflag; }
         uint32 GetWeaponProficiency() const { return m_WeaponProficiency; }
         uint32 GetArmorProficiency() const { return m_ArmorProficiency; }
-        bool IsUseEquipedWeapon( bool mainhand ) const
+		bool IsUseEquipedWeapon( bool mainhand ) const
         {
             // disarm applied only to mainhand weapon
             return !IsInFeralForm() && (!mainhand || !HasFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_DISARMED) );
@@ -1543,6 +1543,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void Initialize(uint32 guid);                      // AHBot
         static uint32 GetZoneIdFromDB(uint64 guid);
         static uint32 GetLevelFromDB(uint64 guid);
+		static uint32 GetGMLevelFromDB(uint64 guid);
         static bool   LoadPositionFromDB(uint32& mapid, float& x,float& y,float& z,float& o, bool& in_flight, uint64 guid);
 
         /*********************************************************/
@@ -1659,7 +1660,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         void CharmSpellInitialize();
         void PossessSpellInitialize();
         void RemovePetActionBar();
-        void UpdatePetScalingAuras();
 
         bool HasSpell(uint32 spell) const;
         bool HasActiveSpell(uint32 spell) const;            // show in spellbook
@@ -2017,7 +2017,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void InitDisplayIds();
 
         bool IsAtGroupRewardDistance(WorldObject const* pRewardSource) const;
-        bool RewardPlayerAndGroupAtKill(Unit* pVictim);
+        bool RewardSinglePlayerAtKill(Unit* pVictim);
         void RewardPlayerAndGroupAtEvent(uint32 creature_id,WorldObject* pRewardSource);
         bool isHonorOrXPTarget(Unit* pVictim) const;
 
@@ -2768,8 +2768,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 m_temporaryUnsummonedPetNumber;
         uint32 m_oldpetspell;
 
-        uint32 m_petScalingUpdateTimer;
-
         AchievementMgr m_achievementMgr;
         ReputationMgr  m_reputationMgr;
         uint32 m_timeSyncCounter;
@@ -2779,6 +2777,13 @@ class MANGOS_DLL_SPEC Player : public Unit
 		
 		// Battleground reward system
         uint32 m_FirstBGTime;
+		
+        // per character gm levels
+    public:
+        int32 GetSecurity() { return m_GMLevel; }
+        void SetSecurity(int32 gmlevel) { m_GMLevel = gmlevel; m_session->SetSecurity(AccountTypes(m_GMLevel)); }
+    private:
+        int32 m_GMLevel;
 };
 
 void AddItemsSetItem(Player*player,Item *item);

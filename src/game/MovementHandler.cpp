@@ -557,7 +557,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
             GetPlayer()->m_anti_NextLenCheck = CurTime+500;
             GetPlayer()->m_anti_MovedLen = 0.0f;
             static const float MaxDeltaXYT = sWorld.GetMvAnticheatMaxXYT();
-
             if (delta_xyt > MaxDeltaXYT && delta<=100.0f && GetPlayer()->GetZoneId() != 2257)
             {
                 if (sWorld.GetMvAnticheatSpeedCheck())
@@ -614,8 +613,8 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
             // Need a better way to do that - currently a lot of fake alarms
             else if ((Anti__MapZ+DIFF_AIRJUMP < GetPlayer()->GetPositionZ() &&
                     (movementInfo.GetMovementFlags() & (MOVEFLAG_FALLINGFAR | MOVEFLAG_PENDINGSTOP))==0) ||
-                    (Anti__MapZ < GetPlayer()->GetPositionZ() && 
-                    opcode==MSG_MOVE_JUMP))
+                    (Anti__MapZ < GetPlayer()->GetPositionZ() && opcode==MSG_MOVE_JUMP) &&
+                    !GetPlayer()->HasAuraType(SPELL_AURA_FEATHER_FALL))
             {
                 if (sWorld.GetMvAnticheatJumpCheck())
                     Anti__CheatOccurred(CurTime,"Possible Air Jump Hack",0.0f,LookupOpcodeName(opcode),0.0f,movementInfo.GetMovementFlags());
@@ -655,15 +654,15 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     movementInfo.UpdateTime(getMSTime());
 
     WorldPacket data(opcode, recv_data.size());
-
-    if(plMover)                                             // nothing is charmed, or player charmed
+	
+	if(plMover)                                             // nothing is charmed, or player charmed
     {
         data.appendPackGUID(mover->GetGUID());                  // write guid
         movementInfo.Write(data);                               // write data
         mover->SendMessageToSetExcept(&data, _player);
 
-        plMover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
         plMover->m_movementInfo = movementInfo;
+        plMover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
         plMover->UpdateFallInformationIfNeed(movementInfo, opcode);
 
         // after move info set
@@ -707,11 +706,11 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     else                                                    // creature charmed
     {
         if(mover->IsInWorld())
-		{
+        {
             mover->GetMap()->CreatureRelocation((Creature*)mover, movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
-			if(((Creature*)mover)->isVehicle())
-                ((Vehicle*)mover)->RellocatePassengers(mover->GetMap());
-		}
+            if(((Creature*)mover)->isVehicle())
+                ((Vehicle*)mover)->RelocatePassengers(mover->GetMap());
+        }
     }
 }
 
@@ -756,7 +755,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
         case CMSG_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK:   move_type = MOVE_FLIGHT_BACK;   force_move_type = MOVE_FLIGHT_BACK; break;
         case CMSG_FORCE_PITCH_RATE_CHANGE_ACK:          move_type = MOVE_PITCH_RATE;    force_move_type = MOVE_PITCH_RATE;  break;
         default:
-            sLog.outError("WorldSession::HandleForceSpeedChangeAck: Unknown move type opcode: %u", opcode);
+            DEBUG_LOG("WorldSession::HandleForceSpeedChangeAck: Unknown move type opcode: %u", opcode);
             return;
     }
 
@@ -800,11 +799,11 @@ void WorldSession::HandleSetActiveMoverOpcode(WorldPacket &recv_data)
         _player->m_mover_in_queve = NULL;
     }*/
 
-    if(_player->m_mover->GetGUID() != guid)
+    /*if(_player->m_mover->GetGUID() != guid)
     {
         sLog.outError("HandleSetActiveMoverOpcode: incorrect mover guid: mover is " I64FMT " and should be " I64FMT, _player->m_mover->GetGUID(), guid);
         return;
-    }
+    }*/
 }
 
 void WorldSession::HandleMoveNotActiveMover(WorldPacket &recv_data)
@@ -817,18 +816,18 @@ void WorldSession::HandleMoveNotActiveMover(WorldPacket &recv_data)
 
     recv_data >> old_mover_guid.ReadAsPacked();
     recv_data >> mi;
-
+/*
     if(_player->m_mover->GetObjectGuid() == old_mover_guid)
     {
-        sLog.outError("HandleMoveNotActiveMover: incorrect mover guid: mover is " I64FMT " and should be " I64FMT " instead of " UI64FMTD, _player->m_mover->GetGUID(), _player->GetGUID(), old_mover_guid.GetRawValue());
+        DEBUG_LOG("HandleMoveNotActiveMover: incorrect mover guid: mover is " I64FMT " and should be " I64FMT " instead of " UI64FMTD, _player->m_mover->GetGUID(), _player->GetGUID(), old_mover_guid.GetRawValue());
         recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
         return;
     }
-
+*/
     _player->m_movementInfo = mi;
 }
 
-void WorldSession::HandleDismissControlledVehicle(WorldPacket &recv_data)
+void WorldSession::HandleDismissControlledVehicle(WorldPacket & recv_data)
 {
     DEBUG_LOG("WORLD: Recvd CMSG_DISMISS_CONTROLLED_VEHICLE");
     recv_data.hexlike();

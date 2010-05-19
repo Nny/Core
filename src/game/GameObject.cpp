@@ -389,16 +389,9 @@ void GameObject::Update(uint32 p_time)
                     if (m_groupLootTimer && m_groupLootId)
                     {
                         if(p_time <= m_groupLootTimer)
-                        {
                             m_groupLootTimer -= p_time;
-                        }
                         else
-                        {
-                            if (Group* group = sObjectMgr.GetGroupById(m_groupLootId))
-                                group->EndRoll();
-                            m_groupLootTimer = 0;
-                            m_groupLootId = 0;
-                        }
+                            StopGroupLoot();
                     }
                     break;
                 default:
@@ -1096,7 +1089,7 @@ void GameObject::Use(Unit* user)
 
                 if (info->goober.eventId)
                 {
-                    DEBUG_LOG("Goober ScriptStart id %u for GO entry %u (GUID %u).", info->goober.eventId, GetEntry(), GetDBTableGUIDLow());
+                    DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "Goober ScriptStart id %u for GO entry %u (GUID %u).", info->goober.eventId, GetEntry(), GetDBTableGUIDLow());
                     GetMap()->ScriptsStart(sEventScripts, info->goober.eventId, player, this);
                 }
 
@@ -1462,7 +1455,7 @@ void GameObject::Use(Unit* user)
         if(user->GetTypeId() != TYPEID_PLAYER || !sOutdoorPvPMgr.HandleCustomSpell((Player*)user,spellId,this))
             sLog.outError("WORLD: unknown spell id %u at use action for gameobject (Entry: %u GoType: %u )", spellId,GetEntry(),GetGoType());
         else
-            sLog.outDebug("WORLD: %u non-dbc spell was handled by OutdoorPvP", spellId);
+            DEBUG_LOG("WORLD: %u non-dbc spell was handled by OutdoorPvP", spellId);
         return;
     }
 

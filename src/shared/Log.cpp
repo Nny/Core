@@ -22,8 +22,8 @@
 #include "Config/ConfigEnv.h"
 #include "Util.h"
 #include "ByteBuffer.h"
+#include "Database/DatabaseEnv.h"
 #include "ProgressBar.h"
-
 #include <stdarg.h>
 #include <fstream>
 #include <iostream>
@@ -31,6 +31,23 @@
 #include "ace/OS_NS_unistd.h"
 
 INSTANTIATE_SINGLETON_1( Log );
+
+LogFilterData logFilterData[LOG_FILTER_COUNT] =
+{
+    { "transport_moves",     "LogFilter_TransportMoves",     true  },
+    { "creature_moves",      "LogFilter_CreatureMoves",      true  },
+    { "visibility_changes",  "LogFilter_VisibilityChanges",  true  },
+    { "achievement_updates", "LogFilter_AchievementUpdates", true  },
+    { "weather",             "LogFilter_Weather",            true  },
+    { "player_stats",        "LogFilter_PlayerStats",        false },
+    { "sql_text",            "LogFilter_SQLText",            false },
+    { "player_moves",        "LogFilter_PlayerMoves",        false },
+    { "periodic_effects",    "LogFilter_PeriodicAffects",    false },
+    { "ai_and_movegens",     "LogFilter_AIAndMovegens",      false },
+    { "damage",              "LogFilter_Damage",             false },
+    { "combat",              "LogFilter_Combat",             false },
+    { "spell_cast",          "LogFilter_SpellCast",          false },
+};
 
 enum LogType
 {
@@ -250,29 +267,14 @@ void Log::Initialize()
     InitColors(sConfig.GetStringDefault("LogColors", ""));
 
     m_logFilter = 0;
-
-    if (sConfig.GetBoolDefault("LogFilter_TransportMoves",     true))
-        m_logFilter |= LOG_FILTER_TRANSPORT_MOVES;
-    if (sConfig.GetBoolDefault("LogFilter_CreatureMoves",      true))
-        m_logFilter |= LOG_FILTER_CREATURE_MOVES;
-    if (sConfig.GetBoolDefault("LogFilter_VisibilityChanges",  true))
-        m_logFilter |= LOG_FILTER_VISIBILITY_CHANGES;
-    if (sConfig.GetBoolDefault("LogFilter_AchievementUpdates", true))
-        m_logFilter |= LOG_FILTER_ACHIEVEMENT_UPDATES;
-    if (sConfig.GetBoolDefault("LogFilter_Weather",            true))
-        m_logFilter |= LOG_FILTER_WEATHER;
-
-    if (sConfig.GetBoolDefault("LogFilter_SQLText",            false))
-        m_logFilter |= LOG_FILTER_SQL_TEXT;
-    if (sConfig.GetBoolDefault("LogFilter_PlayerMoves",        false))
-        m_logFilter |= LOG_FILTER_PLAYER_MOVES;
-    if (sConfig.GetBoolDefault("LogFilter_PeriodicAffects",    false))
-        m_logFilter |= LOG_FILTER_PERIODIC_AFFECTS;
-    if (sConfig.GetBoolDefault("LogFilter_AIAndMovegens",      false))
-        m_logFilter |= LOG_FILTER_AI_AND_MOVEGENSS;
+    for(int i = 0; i < LOG_FILTER_COUNT; ++i)
+        if (logFilterData[i].name)
+            if (sConfig.GetBoolDefault(logFilterData[i].configName, logFilterData[i].defaultState))
+                m_logFilter |= (1 << i);
 
     // Char log settings
     m_charLog_Dump = sConfig.GetBoolDefault("CharLogDump", false);
+    m_charLog_commnad = sConfig.GetBoolDefault("CharLogCommand", false);
 }
 
 FILE* Log::openLogFile(char const* configFileName,char const* configTimeStampFlag, char const* mode)
@@ -734,6 +736,15 @@ void Log::outChar(const char * str, ... )
         va_end(ap);
         fflush(charLogfile);
     }
+}
+
+void Log::outCharCommand( uint32 account_id, uint32 guid, std::string command, const std::string remote )
+{
+    if(!m_charLog_commnad)
+        return;
+
+    loginDatabase.PQuery("INSERT INTO account_command (account_id, character_id, command_name, time_used, remote) VALUES('%d', '%d', '%s', UNIX_TIMESTAMP(NOW()), '%s')",
+        account_id, guid, command.c_str(), remote.c_str());
 }
 
 void Log::outWorldPacketDump( uint32 socket, uint32 opcode, char const* opcodeName, ByteBuffer const* packet, bool incoming )

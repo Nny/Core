@@ -800,7 +800,7 @@ void ObjectMgr::ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* 
     // replace by new structures array
     const_cast<CreatureDataAddonAura*&>(addon->auras) = new CreatureDataAddonAura[val.size()/2+1];
 
-    uint32 i=0;
+    int i=0;
     for(uint32 j = 0; j < val.size()/2; ++j)
     {
         CreatureDataAddonAura& cAura = const_cast<CreatureDataAddonAura&>(addon->auras[i]);
@@ -875,7 +875,7 @@ void ObjectMgr::ConvertCreatureAddonPassengers(CreatureDataAddon* addon, char co
     // replace by new structures array
     const_cast<CreatureDataAddonPassengers*&>(addon->passengers) = new CreatureDataAddonPassengers[val.size()/2+1];
 
-    uint32 i=0;
+    int i=0;
     for(uint32 j=0;j<val.size()/2;++j)
     {
         CreatureDataAddonPassengers& cPas = const_cast<CreatureDataAddonPassengers&>(addon->passengers[i]);
@@ -2433,8 +2433,8 @@ void ObjectMgr::LoadPetLevelInfo()
 {
     // Loading levels data
     {
-        //                                                 0               1      2   3     4    5    6    7     8    9      10      11
-        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor, mindmg, maxdmg FROM pet_levelstats");
+        //                                                 0               1      2   3     4    5    6    7     8    9
+        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor FROM pet_levelstats");
 
         uint32 count = 0;
 
@@ -2491,8 +2491,6 @@ void ObjectMgr::LoadPetLevelInfo()
             pLevelInfo->health = fields[2].GetUInt16();
             pLevelInfo->mana   = fields[3].GetUInt16();
             pLevelInfo->armor  = fields[9].GetUInt16();
-            pLevelInfo->mindmg = fields[10].GetUInt16();
-            pLevelInfo->maxdmg = fields[11].GetUInt16();
 
             for (int i = 0; i < MAX_STATS; i++)
             {

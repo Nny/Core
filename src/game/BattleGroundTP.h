@@ -55,7 +55,7 @@ enum BG_TP_WorldStates
     BG_TP_FLAG_CAPTURES_MAX       = 1601,
     BG_TP_FLAG_STATE_HORDE        = 2338,
     BG_TP_FLAG_STATE_ALLIANCE     = 2339,
-    BG_TP_UNK1                    = 4247, // Show time limit?
+    BG_TP_TIME_ENABLED            = 4247,
     BG_TP_TIME_REMAINING          = 4248
 };
 

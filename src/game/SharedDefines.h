@@ -379,7 +379,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX4_UNK22                      0x00400000            // 22
 #define SPELL_ATTR_EX4_UNK23                      0x00800000            // 23
 #define SPELL_ATTR_EX4_UNK24                      0x01000000            // 24
-#define SPELL_ATTR_EX4_PET_SCALING_AURA           0x02000000            // 25 pet scaling auras
+#define SPELL_ATTR_EX4_UNK25                      0x02000000            // 25 pet scaling auras
 #define SPELL_ATTR_EX4_CAST_ONLY_IN_OUTLAND       0x04000000            // 26 Can only be used in Outland.
 #define SPELL_ATTR_EX4_UNK27                      0x08000000            // 27
 #define SPELL_ATTR_EX4_UNK28                      0x10000000            // 28
@@ -446,7 +446,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX6_UNK23                      0x00800000            // 23 not set in 3.0.3
 #define SPELL_ATTR_EX6_UNK24                      0x01000000            // 24 not set in 3.0.3
 #define SPELL_ATTR_EX6_UNK25                      0x02000000            // 25 not set in 3.0.3
-#define SPELL_ATTR_EX6_UNK26                      0x04000000            // 26 not set in 3.0.3
+#define SPELL_ATTR_EX6_UNK26                      0x04000000            // 26 should not stack due to Aura?
 #define SPELL_ATTR_EX6_UNK27                      0x08000000            // 27 not set in 3.0.3
 #define SPELL_ATTR_EX6_UNK28                      0x10000000            // 28 not set in 3.0.3
 #define SPELL_ATTR_EX6_NO_DMG_PERCENT_MODS        0x20000000            // 29 do not apply damage percent mods (usually in cases where it has already been applied)
@@ -1997,22 +1997,6 @@ enum HolidayIds
     HOLIDAY_WOTLK_LAUNCH             = 406,
     HOLIDAY_DAY_OF_DEAD              = 409,
     HOLIDAY_CALL_TO_ARMS_ISLE_OF_C   = 420
-};
-
-// values based at QuestInfo.dbc
-enum QuestTypes
-{
-    QUEST_TYPE_ELITE               = 1,
-    QUEST_TYPE_LIFE                = 21,
-    QUEST_TYPE_PVP                 = 41,
-    QUEST_TYPE_RAID                = 62,
-    QUEST_TYPE_DUNGEON             = 81,
-    QUEST_TYPE_WORLD_EVENT         = 82,
-    QUEST_TYPE_LEGENDARY           = 83,
-    QUEST_TYPE_ESCORT              = 84,
-    QUEST_TYPE_HEROIC              = 85,
-    QUEST_TYPE_RAID_10             = 88,
-    QUEST_TYPE_RAID_25             = 89
 };
 
 // values based at QuestSort.dbc

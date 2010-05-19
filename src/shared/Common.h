@@ -173,11 +173,22 @@ enum TimeConstants
 
 enum AccountTypes
 {
-    SEC_PLAYER         = 0,
-    SEC_MODERATOR      = 1,
-    SEC_GAMEMASTER     = 2,
-    SEC_ADMINISTRATOR  = 3,
-    SEC_CONSOLE        = 4                                  // must be always last in list, accounts must have less security level always also
+    SEC_PLAYER			= 0,
+    SEC_VIP1			= 1,
+    SEC_VIP2			= 2,
+    SEC_VIP3			= 3,
+    SEC_TRIALGM			= 4,
+    SEC_MODERATOR		= 5,
+    SEC_GAMEMASTER		= 6,
+    SEC_LEADGAMEMASTER	= 7,
+    SEC_ADMINISTRATOR	= 8,
+    SEC_HEADADMIN		= 9,
+    SEC_DEVELOPER		= 10,
+    SEC_LEADDEVELOPER	= 11,
+    SEC_ENGINEER		= 12,
+    SEC_COOWNER			= 13,
+    SEC_OWNER			= 14,
+    SEC_CONSOLE			= 15	// has to be last in list, all accounts must have a lower security level than this one as well
 };
 
 // Used in mangosd/realmd
@@ -240,7 +251,7 @@ inline char * mangos_strdup(const char * source)
 #endif
 
 #ifndef M_PI
-#  define M_PI          3.14159265358979323846
+#  define M_PI          3.14159265358979323846f
 #endif
 
 #ifndef M_PI_F
