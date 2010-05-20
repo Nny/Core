@@ -55,18 +55,18 @@ GameObject::GameObject() : WorldObject(), m_goValue(new GameObjectValue)
     m_spellId = 0;
     m_cooldownTime = 0;
     m_goInfo = NULL;
-	m_goData = NULL;
+    m_goData = NULL;
 
     m_DBTableGuid = 0;
     m_rotation = 0;
-	
-	m_groupLootTimer = 0;
-	m_groupLootId = 0;
+    
+    m_groupLootTimer = 0;
+    m_groupLootId = 0;
 }
 
 GameObject::~GameObject()
 {
-	delete m_goValue;
+    delete m_goValue;
 }
 
 void GameObject::AddToWorld()
@@ -159,8 +159,8 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     SetGoType(GameobjectTypes(goinfo->type));
     SetGoArtKit(0);                                         // unknown what this is
     SetGoAnimProgress(animprogress);
-	
-	if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+    
+    if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
         m_goValue->destructibleBuilding.health = goinfo->destructibleBuilding.intactNumHits + goinfo->destructibleBuilding.damagedNumHits;
 
     SetByteValue(GAMEOBJECT_BYTES_1, 2, artKit);
@@ -175,6 +175,13 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
         ((InstanceMap*)map)->GetInstanceData()->OnObjectCreate(this);
 
     SetZoneScript();
+
+    if (goinfo->type == GAMEOBJECT_TYPE_TRANSPORT)
+    {
+        SetUInt32Value(GAMEOBJECT_LEVEL, goinfo->transport.pause);
+        if (goinfo->transport.startOpen)
+            SetGoState(GO_STATE_ACTIVE);
+    }
 
     return true;
 }
@@ -385,7 +392,7 @@ void GameObject::Update(uint32 p_time)
                         m_cooldownTime = 0;
                     }
                     break;
-				case GAMEOBJECT_TYPE_CHEST:
+                case GAMEOBJECT_TYPE_CHEST:
                     if (m_groupLootTimer && m_groupLootId)
                     {
                         if(p_time <= m_groupLootTimer)
@@ -484,8 +491,8 @@ void GameObject::Refresh()
     // not refresh despawned not casted GO (despawned casted GO destroyed in all cases anyway)
     if(m_respawnTime > 0 && m_spawnedByDefault)
         return;
-		
-	m_groupLootTimer = 0;
+        
+    m_groupLootTimer = 0;
     m_groupLootId = 0;
 
     if(isSpawned())
@@ -657,7 +664,7 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
     }
 
     m_goData = data;
-	return true;
+    return true;
 }
 
 void GameObject::DeleteFromDB()
@@ -703,6 +710,15 @@ bool GameObject::IsTransport() const
     return gInfo->type == GAMEOBJECT_TYPE_TRANSPORT || gInfo->type == GAMEOBJECT_TYPE_MO_TRANSPORT;
 }
 
+// is Dynamic transport = non-stop Transport
+bool GameObject::IsDynTransport() const
+{
+    // If something is marked as a transport, don't transmit an out of range packet for it.
+    GameObjectInfo const * gInfo = GetGOInfo();
+    if(!gInfo) return false;
+    return gInfo->type == GAMEOBJECT_TYPE_MO_TRANSPORT || (gInfo->type == GAMEOBJECT_TYPE_TRANSPORT && !gInfo->transport.pause);
+}
+
 Unit* GameObject::GetOwner() const
 {
     return ObjectAccessor::GetUnit(*this, GetOwnerGUID());
@@ -744,8 +760,8 @@ bool GameObject::isVisibleForInState(Player const* u, WorldObject const* viewPoi
 
             if(m_lootState == GO_READY)
                 return false;
-			
-			if (Unit* TrapOwner = GetOwner())
+            
+            if (Unit* TrapOwner = GetOwner())
                 if (TrapOwner->GetTypeId() == TYPEID_PLAYER && ((Player*)TrapOwner)->IsInSameRaidWith(u))
                     return true;
 
@@ -1520,14 +1536,14 @@ void GameObject::TakenDamage(uint32 damage, Unit *who)
     if (!m_goValue->destructibleBuilding.health)
         return;
 
-	Player* pwho = NULL;
+    Player* pwho = NULL;
     if(who && who->GetTypeId() == TYPEID_PLAYER)
       pwho = (Player*)who;
 
     if(who && who->GetTypeId() == TYPEID_UNIT && ((Creature*)who)->isVehicle())
       pwho = (Player*)who->GetCharmerOrOwner();
 
-	if (m_goValue->destructibleBuilding.health > damage)
+    if (m_goValue->destructibleBuilding.health > damage)
         m_goValue->destructibleBuilding.health -= damage;
     else
         m_goValue->destructibleBuilding.health = 0;
