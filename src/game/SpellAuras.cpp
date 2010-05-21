@@ -2332,7 +2332,20 @@ void Aura::TriggerSpell()
                 target->CastCustomSpell(target, trigger_spell_id, &mana, NULL, NULL, true, NULL, this);
                 return;
             }
-        }
+			// Guardian Swarm
+			case 64396:
+			{
+			   if (Unit* caster = GetCaster())
+               {
+                  // Summon Swarming Guardian
+                  Creature* pCreature = caster->SummonCreature(34034, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), caster->GetOrientation(), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 10000);               				  
+        
+		          if (pCreature)
+				      pCreature->AddThreat(target, 10000.0f);
+				}
+                return;
+			}	
+		}
     }
 
     // All ok cast by default case
@@ -5255,6 +5268,27 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
     SpellEntry const*spell = GetSpellProto();
     switch( spell->SpellFamilyName)
     {
+	    case SPELLFAMILY_GENERIC:
+		{
+		   switch(spell->Id)
+		   {
+		       // Slag Pot (Normal)
+			   case 62717:
+			   {
+			      if (!apply && m_removeMode == AURA_REMOVE_BY_DEFAULT)
+				      m_target->CastSpell(m_target, 62836, true, NULL, this);
+				  break;
+				}
+				// Slag Pot (Heroic)
+				case 63477:
+				{
+				   if (!apply && m_removeMode == AURA_REMOVE_BY_DEFAULT)
+				       m_target->CastSpell(m_target, 63536, true, NULL, this);
+				   break;
+				}
+			}
+			break;
+		}	
         case SPELLFAMILY_ROGUE:
         {
             switch(spell->Id)
@@ -8830,6 +8864,14 @@ void Aura::PeriodicDummyTick()
                     if (mod->m_amount > 0) mod->m_amount = 0;
                     slow->ApplyModifier(true, true);
                 }
+                return;
+            }
+            // Hysteria
+            if (spell->SpellFamilyFlags & UI64LIT(0x0000000020000000))
+            {
+                uint32 deal = m_modifier.m_amount * m_target->GetMaxHealth() / 100;
+                m_target->DealDamage(m_target, deal, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                m_target->SendSpellNonMeleeDamageLog(m_target, spell->Id, deal, SPELL_SCHOOL_MASK_NORMAL, 0, 0, false, 0, false);
                 return;
             }
             // Summon Gargoyle

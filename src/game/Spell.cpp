@@ -1623,6 +1623,10 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 31347:                                 // Doom TODO: exclude top threat target from target selection
                 case 33711:                                 // Murmur's Touch
                 case 38794:                                 // Murmur's Touch (h)
+				case 63018:                                 // XT002's Light Bomb
+				case 65121:                                 // XT002's Light Bomb (h)
+				case 63024:                                 // XT002's Gravitiy Bomb
+				case 64234:                                 // XT002's Gravitiy Bomb (h)
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
@@ -1739,8 +1743,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
         case TARGET_AREAEFFECT_CUSTOM_2:		
         {
             // used for targeting gameobjects
-            targetUnitMap.push_back(m_caster);
-            break;
+            if (m_spellInfo->EffectImplicitTargetA[effIndex] == TARGET_EFFECT_SELECT && m_spellInfo->EffectImplicitTargetB[effIndex] == TARGET_AREAEFFECT_CUSTOM)
+		       FillAreaTargets(targetUnitMap, m_caster->GetPositionX(), m_caster->GetPositionY(), radius, PUSH_SELF_CENTER, SPELL_TARGETS_AOE_DAMAGE);
+            else
+			    targetUnitMap.push_back(m_caster);
+		    break;
         }
         case TARGET_RANDOM_ENEMY_CHAIN_IN_AREA:
         {
@@ -3170,13 +3177,21 @@ void Spell::cast(bool skipCheck)
                 if (m_targets.getUnitTarget() && m_targets.getUnitTarget()->getVictim() != m_caster)
                     AddPrecastSpell(67485);                 // Hand of Rekoning (no typos in name ;) )
             }
-            // Divine Shield, Divine Protection, Hand of Protection or Lay on Hands
-            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000408080))
+            // Divine Shield, Divine Protection or Hand of Protection
+            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000400080))
             {
                 AddPrecastSpell(25771);                     // Forbearance
                 AddPrecastSpell(61987);                     // Avenging Wrath Marker
             }
-            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x200000000000))
+            // Lay on Hands
+            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000008000))
+            {
+                // only for self cast
+                if (m_caster == m_targets.getUnitTarget())
+                    AddPrecastSpell(25771);                     // Forbearance
+            }
+            // Avenging Wrath
+            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000200000000000))
                 AddPrecastSpell(61987);                     // Avenging Wrath Marker
             // Lay on Hands
             else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x000000008000))
@@ -3207,6 +3222,7 @@ void Spell::cast(bool skipCheck)
             // Spirit Walk
             else if (m_spellInfo->Id == 58875)
                 AddPrecastSpell(58876);
+            // Totem of Wrath
             else if (m_spellInfo->Effect[EFFECT_INDEX_0]==SPELL_EFFECT_APPLY_AREA_AURA_RAID && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000004000000))
                 // only for main totem spell cast
                 AddTriggeredSpell(30708);                   // Totem of Wrath
@@ -4796,6 +4812,16 @@ SpellCastResult Spell::CheckCast(bool strict)
             // Focus Magic (main spell)
             if (m_spellInfo->Id == 54646)
                 return SPELL_FAILED_BAD_TARGETS;
+
+            // Lay on Hands (self cast)
+            if (m_spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN &&
+                m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000008000))
+            {
+                if (target->HasAura(25771))                 // Forbearance
+                    return SPELL_FAILED_CASTER_AURASTATE;
+                if (target->HasAura(61987))                 // Avenging Wrath Marker
+                    return SPELL_FAILED_CASTER_AURASTATE;
+            }
         }
 
         // check pet presents
@@ -5499,7 +5525,7 @@ SpellCastResult Spell::CheckCast(bool strict)
 
                     if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->getClass() == CLASS_WARLOCK)
                     {
-                        if (strict)                         //starting cast, trigger pet stun (cast by pet so it doesn't attack player)
+                        if (strict)                         //Summoning Disorientation, trigger pet stun (cast by pet so it doesn't attack player)
                             pet->CastSpell(pet, 32752, true, NULL, NULL, pet->GetGUID());
                     }
                     else
@@ -5540,9 +5566,14 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 // not allow use this effect at battleground until battleground start
                 if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
                     if(BattleGround const *bg = ((Player*)m_caster)->GetBattleGround())
                         if(bg->GetStatus() != STATUS_IN_PROGRESS)
                             return SPELL_FAILED_TRY_AGAIN;
+
+                    if(((Player*)m_caster)->HasMovementFlag(MOVEFLAG_ONTRANSPORT))
+                        return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+                }
                 break;
             }
             case SPELL_EFFECT_STEAL_BENEFICIAL_BUFF:
@@ -5581,7 +5612,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 //custom check
                 switch(m_spellInfo->Id)
                 {
-                    case 61336:
+                    case 61336:                             // Survival Instincts
                         if(m_caster->GetTypeId() != TYPEID_PLAYER || !((Player*)m_caster)->IsInFeralForm())
                             return SPELL_FAILED_ONLY_SHAPESHIFT;
                         break;
@@ -5700,7 +5731,7 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 // not allow cast fly spells if not have req. skills  (all spells is self target)
                 // allow always ghost flight spells
-                if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->isAlive())
+                if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->isAlive() && (!(sWorld.getConfig(CONFIG_BOOL_ALWAYS_ALLOW_FLY))))
                 {
                     if (!((Player*)m_caster)->IsKnowHowFlyIn(m_caster->GetMapId(), zone, area))
                         return m_IsTriggeredSpell ? SPELL_FAILED_DONT_REPORT : SPELL_FAILED_NOT_HERE;
@@ -5829,7 +5860,9 @@ SpellCastResult Spell::CheckCasterAuras() const
     // Flag drop spells totally immuned to caster auras
     // FIXME: find more nice check for all totally immuned spells
     // AttributesEx3 & 0x10000000?
-    if(m_spellInfo->Id == 23336 || m_spellInfo->Id == 23334 || m_spellInfo->Id == 34991)
+    if (m_spellInfo->Id == 23336 ||                         // Alliance Flag Drop
+        m_spellInfo->Id == 23334 ||                         // Horde Flag Drop
+        m_spellInfo->Id == 34991)                           // Summon Netherstorm Flag
         return SPELL_CAST_OK;
 
     uint8 school_immune = 0;
@@ -6739,8 +6772,8 @@ bool Spell::CheckTargetCreatureType(Unit* target) const
 {
     uint32 spellCreatureTargetMask = m_spellInfo->TargetCreatureType;
 
-    // Curse of Doom & Exorcism: not find another way to fix spell target check :/
-    if (m_spellInfo->SpellFamilyName==SPELLFAMILY_WARLOCK && m_spellInfo->Category == 1179)
+    // Curse of Doom: not find another way to fix spell target check :/
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_WARLOCK && m_spellInfo->Category == 1179)
     {
         // not allow cast at player
         if(target->GetTypeId()==TYPEID_PLAYER)

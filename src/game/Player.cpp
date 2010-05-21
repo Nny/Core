@@ -940,6 +940,9 @@ uint32 Player::EnvironmentalDamage(EnviromentalDamage type, uint32 damage)
 
     uint32 final_damage = DealDamage(this, damage, NULL, SELF_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
+	if(HasAuraType(SPELL_AURA_MOD_FLIGHT_SPEED_MOUNTED) && type==DAMAGE_FALL)
+	    final_damage = 0;
+		
     if(!isAlive())
     {
         if(type==DAMAGE_FALL)                               // DealDamage not apply item durability loss at self damage
@@ -4640,7 +4643,11 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 void Player::KillPlayer()
 {
     if (sWorld.getConfig(CONFIG_BOOL_PLAYER_AUTO_RESS))
+    {
+        m_deathTimer = 0;
+        BuildPlayerRepop();
         RepopAtGraveyard(); // resurrect the player on the nearest graveyard, automatically leaves corpse behind
+    }
     else
     {
         SetMovement(MOVE_ROOT);

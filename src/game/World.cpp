@@ -734,6 +734,7 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_UINT32_CHAT_STRICT_LINK_CHECKING_SEVERITY, "ChatStrictLinkChecking.Severity", 0);
     setConfig(CONFIG_UINT32_CHAT_STRICT_LINK_CHECKING_KICK,     "ChatStrictLinkChecking.Kick", 0);
 
+    setConfig(CONFIG_BOOL_CORPSE_EMPTY_LOOT_SHOW,      "Corpse.EmptyLootShow", true);
     setConfigPos(CONFIG_UINT32_CORPSE_DECAY_NORMAL,    "Corpse.Decay.NORMAL",    60);
     setConfigPos(CONFIG_UINT32_CORPSE_DECAY_RARE,      "Corpse.Decay.RARE",      300);
     setConfigPos(CONFIG_UINT32_CORPSE_DECAY_ELITE,     "Corpse.Decay.ELITE",     300);
@@ -848,6 +849,7 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_ALL_WEAPONS_MAX_SKILL, "Custom.AllWeaponSkillsAtMax", false);
     setConfig(CONFIG_BOOL_PLAYER_AUTO_RESS, "Custom.AutoRessPlayersOnDeath", false);
     setConfig(CONFIG_BOOL_ALL_WEAPONS_FOR_CLASS_MAX_SKILL, "Custom.AllWeaponSkillsForClassAtMax", false);
+    setConfig(CONFIG_BOOL_ALWAYS_ALLOW_FLY, "Custom.NoFlightRequirements", false);
 
 	/*Vmap Rewrite*/
     setConfig(CONFIG_UINT32_VMAP_INDOOR_INTERVAL,     "vmap.indoorCheckInterval", 0);
