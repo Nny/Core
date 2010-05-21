@@ -132,14 +132,14 @@ enum Opcodes
     SMSG_GAMEOBJECT_QUERY_RESPONSE                  = 0xebe8,
     CMSG_CREATURE_QUERY                             = 0xafeb,
     SMSG_CREATURE_QUERY_RESPONSE                    = 0xcfe8,
-    CMSG_WHO                                        = 0x062,
+    CMSG_WHO                                        = 0xfde9,
     SMSG_WHO                                        = 0x063,
     CMSG_WHOIS                                      = 0x064,
     SMSG_WHOIS                                      = 0x065,
     CMSG_CONTACT_LIST                               = 0x066,
     SMSG_CONTACT_LIST                               = 0x067,
     SMSG_FRIEND_STATUS                              = 0x068,
-    CMSG_ADD_FRIEND                                 = 0x069,
+    CMSG_ADD_FRIEND                                 = 0xaf6f,
     CMSG_DEL_FRIEND                                 = 0x06A,
     CMSG_SET_CONTACT_NOTES                          = 0x06B,
     CMSG_ADD_IGNORE                                 = 0x06C,
@@ -185,7 +185,7 @@ enum Opcodes
     UMSG_UPDATE_GUILD                               = 0x094,
     CMSG_MESSAGECHAT                                = 0x69ed,
     SMSG_MESSAGECHAT                                = 0x9b63,
-    CMSG_JOIN_CHANNEL                               = 0x097,
+    CMSG_JOIN_CHANNEL                               = 0x1bee,
     CMSG_LEAVE_CHANNEL                              = 0x098,
     SMSG_CHANNEL_NOTIFY                             = 0xa9e3,
     CMSG_CHANNEL_LIST                               = 0x09A,
@@ -211,7 +211,7 @@ enum Opcodes
     SMSG_READ_ITEM_OK                               = 0x0AE,
     SMSG_READ_ITEM_FAILED                           = 0x0AF,
     SMSG_ITEM_COOLDOWN                              = 0x0f61,
-    CMSG_GAMEOBJ_USE                                = 0x0B1,
+    CMSG_GAMEOBJ_USE                                = 0x5fee,
     CMSG_DESTROY_ITEMS                              = 0x0B2,
     SMSG_GAMEOBJECT_CUSTOM_ANIM                     = 0x0B3,
     CMSG_AREATRIGGER                                = 0x0B4,
@@ -292,7 +292,7 @@ enum Opcodes
     CMSG_TUTORIAL_CLEAR                             = 0x0FF,
     CMSG_TUTORIAL_RESET                             = 0x100,
     CMSG_STANDSTATECHANGE                           = 0x101,
-    CMSG_EMOTE                                      = 0x102,
+    CMSG_EMOTE                                      = 0xf9ee,
     SMSG_EMOTE                                      = 0x103,
     CMSG_TEXT_EMOTE                                 = 0x104,
     SMSG_TEXT_EMOTE                                 = 11105,
@@ -336,7 +336,7 @@ enum Opcodes
     SMSG_LEARNED_SPELL                              = 0xbdea,
     SMSG_SUPERCEDED_SPELL                           = 0x12C,
     CMSG_NEW_SPELL_SLOT                             = 0x12D,
-    CMSG_CAST_SPELL                                 = 0x12E,
+    CMSG_CAST_SPELL                                 = 0xa962,
     CMSG_CANCEL_CAST                                = 0x12F,
     SMSG_CAST_FAILED                                = 0x4d62,
     SMSG_SPELL_START                                = 0xef64,
@@ -352,7 +352,7 @@ enum Opcodes
     CMSG_CANCEL_CHANNELLING                         = 0x13B,
     SMSG_AI_REACTION                                = 0x7fe7,
     CMSG_SET_SELECTION                              = 0x13D,
-    CMSG_EQUIPMENT_SET_DELETE                       = 0x13E,
+    CMSG_EQUIPMENT_SET_DELETE                       = 0xaf69,
     CMSG_INSTANCE_LOCK_WARNING_RESPONSE             = 0x13F,
     CMSG_UNUSED2                                    = 0x140,
     CMSG_ATTACKSWING                                = 0x141,
@@ -413,7 +413,7 @@ enum Opcodes
     SMSG_PET_NAME_INVALID                           = 0x178,
     SMSG_PET_SPELLS                                 = 0x179,
     SMSG_PET_MODE                                   = 0x17A,
-    CMSG_GOSSIP_HELLO                               = 0x17B,
+    CMSG_GOSSIP_HELLO                               = 0x8f62,
     CMSG_GOSSIP_SELECT_OPTION                       = 0x17C,
     SMSG_GOSSIP_MESSAGE                             = 0x17D,
     SMSG_GOSSIP_COMPLETE                            = 0x17E,
@@ -492,7 +492,7 @@ enum Opcodes
     SMSG_PETITION_QUERY_RESPONSE                    = 0x59ef,
     SMSG_FISH_NOT_HOOKED                            = 0x1C8,
     SMSG_FISH_ESCAPED                               = 0x1C9,
-    CMSG_BUG                                        = 0x1CA,
+    CMSG_BUG                                        = 0x8d6d,
     SMSG_NOTIFICATION                               = 0x99ee,
     CMSG_PLAYED_TIME                                = 0xff62,
     SMSG_PLAYED_TIME                                = 0x1f69,
@@ -534,7 +534,7 @@ enum Opcodes
     MSG_SAVE_GUILD_EMBLEM                           = 0x1F1,
     MSG_TABARDVENDOR_ACTIVATE                       = 0x1F2,
     SMSG_PLAY_SPELL_VISUAL                          = 0xad60,
-    CMSG_ZONEUPDATE                                 = 0x1F4,
+    CMSG_ZONEUPDATE                                 = 0x1be4,
     SMSG_PARTYKILLLOG                               = 0x1F5,
     SMSG_COMPRESSED_UPDATE_OBJECT                   = 0xafe3,
     SMSG_PLAY_SPELL_IMPACT                          = 0xbd6e,
@@ -551,7 +551,7 @@ enum Opcodes
     CMSG_UNLEARN_SKILL                              = 0x202,
     SMSG_REMOVED_SPELL                              = 0x203,
     CMSG_DECHARGE                                   = 0x204,
-    CMSG_GMTICKET_CREATE                            = 0x205,
+    CMSG_GMTICKET_CREATE                            = 0x2bec,
     SMSG_GMTICKET_CREATE                            = 0xfde2,
     CMSG_GMTICKET_UPDATETEXT                        = 0x207,
     SMSG_GMTICKET_UPDATETEXT                        = 0x9fe0,
@@ -606,7 +606,7 @@ enum Opcodes
     SMSG_SEND_MAIL_RESULT                           = 0x239,
     CMSG_GET_MAIL_LIST                              = 0x23A,
     SMSG_MAIL_LIST_RESULT                           = 0x23B,
-    CMSG_BATTLEFIELD_LIST                           = 0x23C,
+    CMSG_BATTLEFIELD_LIST                           = 0xa9e7,
     SMSG_BATTLEFIELD_LIST                           = 0x23D,
     CMSG_BATTLEFIELD_JOIN                           = 0x23E,
     SMSG_BATTLEFIELD_WIN_OBSOLETE                   = 0xfb6d,
@@ -627,9 +627,9 @@ enum Opcodes
     SMSG_PERIODICAURALOG                            = 0x24E,
     SMSG_SPELLDAMAGESHIELD                          = 0x24F,
     SMSG_SPELLNONMELEEDAMAGELOG                     = 0x250,
-    CMSG_LEARN_TALENT                               = 0x251,
+    CMSG_LEARN_TALENT                               = 0xdbe2,
     SMSG_RESURRECT_FAILED                           = 0x252,
-    CMSG_TOGGLE_PVP                                 = 0x253,
+    CMSG_TOGGLE_PVP                                 = 0x8b6d,
     SMSG_ZONE_UNDER_ATTACK                          = 27503,
     MSG_AUCTION_HELLO                               = 0x255,
     CMSG_AUCTION_SELL_ITEM                          = 0x256,
@@ -825,13 +825,13 @@ enum Opcodes
     SMSG_GAMETIMEBIAS_SET                           = 0x314,
     CMSG_DEBUG_ACTIONS_START                        = 0x315,
     CMSG_DEBUG_ACTIONS_STOP                         = 0x316,
-    CMSG_SET_FACTION_INACTIVE                       = 0x317,
-    CMSG_SET_WATCHED_FACTION                        = 0x318,
+    CMSG_SET_FACTION_INACTIVE                       = 0xc96d,
+    CMSG_SET_WATCHED_FACTION                        = 0xd96a,
     MSG_MOVE_TIME_SKIPPED                           = 0xc9e1,
     SMSG_SPLINE_MOVE_ROOT                           = 0x31A,
     CMSG_SET_EXPLORATION_ALL                        = 0x31B,
     SMSG_INVALIDATE_PLAYER                          = 0x496a,
-    CMSG_RESET_INSTANCES                            = 0x31D,
+    CMSG_RESET_INSTANCES                            = 0xbf6b,
     SMSG_INSTANCE_RESET                             = 0x31E,
     SMSG_INSTANCE_RESET_FAILED                      = 0x31F,
     SMSG_UPDATE_LAST_INSTANCE                       = 0x320,
@@ -1103,7 +1103,7 @@ enum Opcodes
     CMSG_CALENDAR_GET_EVENT                         = 0x42A,
     CMSG_CALENDAR_GUILD_FILTER                      = 0x42B,
     CMSG_CALENDAR_ARENA_TEAM                        = 0x42C,
-    CMSG_CALENDAR_ADD_EVENT                         = 0x42D,
+    CMSG_CALENDAR_ADD_EVENT                         = 0x8fe4,
     CMSG_CALENDAR_UPDATE_EVENT                      = 0x42E,
     CMSG_CALENDAR_REMOVE_EVENT                      = 0x42F,
     CMSG_CALENDAR_COPY_EVENT                        = 0x430,
@@ -1247,7 +1247,7 @@ enum Opcodes
     CMSG_CALENDAR_CONTEXT_EVENT_SIGNUP              = 0x4BA, // CMSG, uint64, lua: CalendarContextEventSignUp
     SMSG_CALENDAR_ACTION_PENDING                    = 0x4BB, // SMSG, calendar related EVENT_CALENDAR_ACTION_PENDING
     SMSG_EQUIPMENT_SET_LIST                         = 0x69eb, // SMSG, equipment manager list?
-    CMSG_EQUIPMENT_SET_SAVE                         = 0x4BD, // CMSG, lua: SaveEquipmentSet
+    CMSG_EQUIPMENT_SET_SAVE                         = 0x096b, // CMSG, lua: SaveEquipmentSet
     CMSG_UPDATE_PROJECTILE_POSITION                 = 0x4BE, // CMSG, uint64 caster, uint32 spellId, uint8 castId, vector3 position
     SMSG_SET_PROJECTILE_POSITION                    = 0xdf6f, // SMSG, uint64 caster, uint8 castId, vector3 position
     SMSG_TALENTS_INFO                               = 0x0f66, // SMSG, talents related
@@ -1271,7 +1271,7 @@ enum Opcodes
     MSG_MOVE_UNKNOWN_1234                           = 0x2d66, // SMSG, movement related
     SMSG_SPLINE_MOVE_UNKNOWN_1235                   = 0x4D3, // SMSG, movement related
     SMSG_SPLINE_MOVE_UNKNOWN_1236                   = 0x4D4, // SMSG, movement related
-    CMSG_EQUIPMENT_SET_USE                          = 0x4D5, // CMSG, lua: UseEquipmentSet
+    CMSG_EQUIPMENT_SET_USE                          = 0x19ec, // CMSG, lua: UseEquipmentSet
     SMSG_EQUIPMENT_SET_USE_RESULT                   = 0xefea, // SMSG, UseEquipmentSetResult?
     UMSG_UNKNOWN_1239                               = 0x4D7, // not found 3.2
     SMSG_UNKNOWN_1240                               = 0x4D8, // SMSG, uint64, string, doing nothing
