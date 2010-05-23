@@ -1076,35 +1076,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, 23782, true);
                     m_caster->CastSpell(m_caster, 23783, true);
                     return;
-                case 25860:                                 // Reindeer Transformation
-                {
-                    if (!m_caster->HasAuraType(SPELL_AURA_MOUNTED))
-                        return;
-
-                    float flyspeed = m_caster->GetSpeedRate(MOVE_FLIGHT);
-                    float speed = m_caster->GetSpeedRate(MOVE_RUN);
-
-                    m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
-
-                    // 5 different spells used depending on mounted speed and if mount can fly or not
-                    if (flyspeed >= 4.1f)
-                        // Flying Reindeer
-                        m_caster->CastSpell(m_caster, 44827, true); // 310% flying Reindeer
-                    else if (flyspeed >= 3.8f)
-                        // Flying Reindeer
-                        m_caster->CastSpell(m_caster, 44825, true); // 280% flying Reindeer
-                    else if (flyspeed >= 1.6f)
-                        // Flying Reindeer
-                        m_caster->CastSpell(m_caster, 44824, true); // 60% flying Reindeer
-                    else if (speed >= 2.0f)
-                        // Reindeer
-                        m_caster->CastSpell(m_caster, 25859, true); // 100% ground Reindeer
-                    else
-                        // Reindeer
-                        m_caster->CastSpell(m_caster, 25858, true); // 60% ground Reindeer
-
-                    return;
-                }
                 case 26074:                                 // Holiday Cheer
                     // implemented at client side
                     return;
@@ -2653,7 +2624,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
             {
                 if (m_caster->IsFriendlyTo(unitTarget))
                 {
-                    if (unitTarget->GetCreatureType() != CREATURE_TYPE_UNDEAD)
+                    if (!unitTarget || unitTarget->GetCreatureType() != CREATURE_TYPE_UNDEAD)
                         return;
 
                     int32 bp = int32(damage * 1.5f);
@@ -6801,6 +6772,31 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->RemoveAurasDueToSpell(m_spellInfo->CalculateSimpleValue(eff_idx));
                     break;
                 }
+                case 57337:                                 // Great Feast
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 58067, true);
+                    break;
+                }
+                case 57397:                                 // Fish Feast
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 57292, true);
+                    break;
+                }
+                case 58466:                                 // Gigantic Feast
+                case 58475:                                 // Small Feast
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 57085, true);
+                    break;
+                }
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                 {
@@ -6895,6 +6891,15 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                  
                     ((Creature*)m_caster)->ForcedDespawn(1000);
                     return;
+                }
+                case 66477:                                 // Bountiful Feast
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 65422, true);
+                    unitTarget->CastSpell(unitTarget, 66622, true);
+                    break;
                 }
                 case 69377:                                 // Fortitude
                 {
@@ -7233,7 +7238,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     case 57774: spellId1 = 20185; break;    // Judgement of Light
                     case 53408: spellId1 = 20186; break;    // Judgement of Wisdom
                     default:
-                        sLog.outError("Unsupported Judgement (seal trigger) spell (Id: %u) in Spell::EffectScriptEffect",m_spellInfo->Id);
+                        DEBUG_LOG("Unsupported Judgement (seal trigger) spell (Id: %u) in Spell::EffectScriptEffect",m_spellInfo->Id);
                         return;
                 }
 
@@ -8227,7 +8232,7 @@ void Spell::DoSummonCritter(SpellEffectIndex eff_idx, uint32 forceFaction)
     if(!critter->Create(map->GenerateLocalLowGuid(HIGHGUID_PET), map, m_caster->GetPhaseMask(),
         pet_entry, pet_number))
     {
-        sLog.outError("Spell::EffectSummonCritter, spellid %u: no such creature entry %u", m_spellInfo->Id, pet_entry);
+        DEBUG_LOG("Spell::EffectSummonCritter, spellid %u: no such creature entry %u", m_spellInfo->Id, pet_entry);
         delete critter;
         return;
     }
@@ -8249,7 +8254,7 @@ void Spell::DoSummonCritter(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     if(!critter->IsPositionValid())
     {
-        sLog.outError("Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
+        DEBUG_LOG("Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
             critter->GetGUIDLow(), critter->GetEntry(), critter->GetPositionX(), critter->GetPositionY());
         delete critter;
         return;
@@ -8845,7 +8850,7 @@ void Spell::EffectPlayMusic(SpellEffectIndex eff_idx)
 
     if (!sSoundEntriesStore.LookupEntry(soundid))
     {
-        sLog.outError("EffectPlayMusic: Sound (Id: %u) not exist in spell %u.",soundid,m_spellInfo->Id);
+        DEBUG_LOG("EffectPlayMusic: Sound (Id: %u) not exist in spell %u.",soundid,m_spellInfo->Id);
         return;
     }
 
@@ -8910,7 +8915,7 @@ void Spell::EffectBind(SpellEffectIndex eff_idx)
         SpellTargetPosition const* st = sSpellMgr.GetSpellTargetPosition(m_spellInfo->Id);
         if (!st)
         {
-            sLog.outError( "Spell::EffectBind - unknown Teleport coordinates for spell ID %u", m_spellInfo->Id );
+            DEBUG_LOG( "Spell::EffectBind - unknown Teleport coordinates for spell ID %u", m_spellInfo->Id );
             return;
         }
 
