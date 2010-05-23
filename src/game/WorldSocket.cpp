@@ -215,7 +215,6 @@ long WorldSocket::RemoveReference (void)
 
 int WorldSocket::open (void *a)
 {
-       DEBUG_LOG( "worldsocket::open" );
     ACE_UNUSED_ARG (a);
 
     // Prevent double call to this func.
