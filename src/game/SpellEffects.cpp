@@ -1839,6 +1839,27 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         m_caster->CastSpell(unitTarget, m_caster->GetMap()->IsRegularDifficulty() ? 55959 : 59513, false);
                     return;
                 }
+
+				// X-53 Touring Rocket 
+				case 75973:
+                {
+                    if(!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Prevent stacking of mounts
+                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+
+                    // Triggered spell id dependent of riding skill
+                    if(uint16 skillval = ((Player*)unitTarget)->GetSkillValue(SKILL_RIDING))
+                    {
+                        if (skillval >= 300)
+                            unitTarget->CastSpell(unitTarget, 76154, true);
+                        else
+                            unitTarget->CastSpell(unitTarget, 75957, true);
+                    }
+                    return;
+				}
+
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
@@ -5175,8 +5196,8 @@ void Spell::EffectEnchantItemTmp(SpellEffectIndex eff_idx)
     // other cases with this SpellVisual already selected
     else if(m_spellInfo->SpellVisual[0] == 215)
         duration = 1800;                                    // 30 mins
-    // some fishing pole bonuses
-    else if(m_spellInfo->SpellVisual[0] == 563)
+    // some fishing pole bonuses except Glow Worm which lasts full hour
+    else if(m_spellInfo->SpellVisual[0] == 563 && m_spellInfo->Id != 64401)
         duration = 600;                                     // 10 mins
     // shaman rockbiter enchantments
     else if(m_spellInfo->SpellVisual[0] == 0)
