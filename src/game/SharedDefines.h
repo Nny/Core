@@ -2735,7 +2735,7 @@ enum TotemSlot
 // others will not and opposite
 // will only support WoW, WoW:TBC and WoW:WotLK 4.0.0 client build 12065...
 
-#define EXPECTED_DIAMOND_CLIENT_BUILD        {12065, 0}
+#define EXPECTED_MANGOSD_CLIENT_BUILD        {12065, 0}
 
 // max supported expansion level in mangosd
 // NOTE: not set it more that supported by targeted client version with all expansions installed
